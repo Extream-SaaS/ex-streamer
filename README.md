@@ -1,13 +1,13 @@
 # Extreamer
 
-## Manager API
+## Manager API
 * RESTful API for managing streams and their consumers
 * App Engine serverless functions
 * Data stored in Firestore
 
 ### Commands
 * Create RTMP stream
-* * Payload
+  * Payload
     ```json
     {
       "activation": "datetime",
@@ -18,7 +18,7 @@
     }
     ```
     If `dedicated` is set to `true` then we create a dedicated node in the cluster. Otherwise, we will use a shared node.
-* * Returns:
+  * Returns:
     ```json
     {
       "id": "uuid",
@@ -31,7 +31,7 @@
     }
     ```
 * Update RTMP stream
-* * Payload
+  * Payload
     ```json
     {
       "activation": "datetime",
@@ -42,7 +42,7 @@
     }
     ```
     If `dedicated` is set to `true` then we create a dedicated node in the cluster. Otherwise, we will use a shared node.
-* * Returns:
+  * Returns:
     ```json
     {
       "id": "uuid",
@@ -55,7 +55,7 @@
     }
     ```
 * Upload VOD file
-* * Payload (multipart/form-data)
+  * Payload (multipart/form-data)
     ```form-data
     file=BINARY_CONTENT
     name=string
@@ -63,7 +63,7 @@
     duration=integer
     breakpoints[]=array of bitrate versions
     ```
-* * Returns:
+ * Returns:
     ```json
     {
       "id": "uuid",
@@ -72,7 +72,7 @@
     }
 ## Inbound Content
 * A node.js docker container with node-media-server
-* * Single-tenant - docker container created for each RTMP creation
+  * Single-tenant - docker container created for each RTMP creation
 
 ## Outbound Content
 * On demand docker container with shaka packager installed to convert a UDP stream or video file to a DASH manifest and media segments
