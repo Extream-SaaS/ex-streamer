@@ -48,6 +48,8 @@ nms.on('prePublish', (id, StreamPath, args) => {
 
 nms.on('postPublish', (id, StreamPath, args) => {
   console.log('[NodeEvent on postPublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+  // user has begin publishing. Lets invoke packager and ffmpeg
+  
 });
 
 nms.on('donePublish', (id, StreamPath, args) => {
