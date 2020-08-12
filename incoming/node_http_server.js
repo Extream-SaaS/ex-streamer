@@ -41,6 +41,11 @@ class NodeHttpServer {
       res.header("Access-Control-Allow-Credentials", true);
       req.method === "OPTIONS" ? res.sendStatus(200) : next();
     });
+  
+    app.get('/', (req, res) => {
+      res.status(200);
+      res.send('OK');
+    });
 
     app.get('*.flv', (req, res, next) => {
       req.nmsConnectionType = 'http';
