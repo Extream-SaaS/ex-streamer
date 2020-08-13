@@ -1,0 +1,14 @@
+streaming_mode: live
+resolutions:
+  - 480p
+  - 1080p
+audio_codecs:
+  - aac
+video_codecs:
+  - h264
+manifest_format:
+  - dash
+segment_size: 2
+availability_window: 200
+presentation_delay: 50
+update_period: 4

@@ -2,15 +2,16 @@
 
 Converter is used to take an RTMP source and convert it to an mpegts stream that is then published to a UDP source
 
-ffmpeg in App Engine Flexible triggered by onPublish event in `incoming` microservice
+ffmpeg in App Engine Flexible triggered by onPublish event in `incoming` microservice - publish to event queue subscribed by worker
+concept here: https://medium.com/google-cloud/scalable-video-transcoding-with-app-engine-flexible-621f6e7fdf56
 
 ## Commands
 
 ### start
 
-POST `/start`
+message: `start`
 
-Request Payload:
+data:
 ```JSON
 {
   "input": "rtmp://",
@@ -25,7 +26,7 @@ Request Payload:
 }
 ```
 
-Response Payload:
+returned message:
 ```JSON
 {
   "id": "uuid",
@@ -33,11 +34,18 @@ Response Payload:
 }
 ```
 
+
 ### status
 
-GET `/status/{id}`
+message: `status`
 
-Response Payload:
+data:
+```JSON
+{
+  "id": "uuid"
+}
+
+returned message:
 
 ```JSON
 {
@@ -54,16 +62,17 @@ Response Payload:
 
 ### stop
 
-PATCH `/stop/{id}`
+message `stop`
 
-Request Payload:
+data:
 ```JSON
 {
+  "id": "uuid",
   "when": "now | time in seconds"
 }
 ```
 
-Response Payload:
+returned message:
 ```JSON
 {
   "status": "stopped | stopping | error"

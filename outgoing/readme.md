@@ -11,11 +11,6 @@ ffmpeg -re \
 ```
 
 ```bash
-ffmpeg -re \
--i rtmp://incoming.stream.extream.app/live/stream01 \
--c:v libx264 -acodec copy -ab 128k -f mpegts udp://127.0.0.1:40000
-```
-```bash
 'in=udp://127.0.0.1:40000,stream=video,init_segment=h264_360p_init.mp4,segment_template=h264_360p_$Number$.m4s' \
   'in=udp://127.0.0.1:40000,stream=video,init_segment=h264_480p_init.mp4,segment_template=h264_480p_$Number$.m4s' \
   'in=udp://127.0.0.1:40000,stream=video,init_segment=h264_720p_init.mp4,segment_template=h264_720p_$Number$.m4s' \
