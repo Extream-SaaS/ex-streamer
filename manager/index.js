@@ -103,12 +103,77 @@ exports.manage = async (event, context, callback) => {
           throw new Error('item not found');
         }
 
-        let data = stream.data();
-
+        let data = stream.data();  
+        if (domain === 'client') {
+          // generate the URL to use \\
+          // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
+          const rehearsalCutoff = new Date(stream.start_date.getTime() - 30 * 60000);
+          let url = 'rtmp://incoming.stream.extream.app/';
+          if (stream.mode === 'live' && rehearsalCutoff > new Date()) {
+            url += 'reheardal';
+          }
+          if (stream.mode === 'record' && rehearsalCutoff > new Date()) {
+            url += 'recorder';
+          }
+          if (stream.mode === 'record' && rehearsalCutoff < new Date()) {
+            url = 'expired';
+          }
+          if (new Date() > stream.end_date) {
+            url = 'expired';
+          }
+          data.url = url;
+        }
         await publish('ex-gateway', { domain, action, command, payload: data, user, socketId });
         callback();
       } catch (error) {
         await publish('ex-gateway', { error: error.message, domain, action, command, payload, user, socketId });
+        callback(0);
+      }
+      break;
+    case 'activate':
+      try {
+        // this is only available for client domain \\
+        if (domain !== 'client') {
+          throw new Error('only clients activate');
+        }
+        const docRef = db.collection('streams').doc(payload.id);
+        const stream = await docRef.get();
+        
+        if (!stream.exists) {
+          throw new Error('item not found');
+        }
+
+        let data = stream.data();
+
+        // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
+        const rehearsalCutoff = new Date(stream.start_date.getTime() - 30 * 60000);
+        let status = 'live';
+        let broadcast = true;
+        if (stream.mode === 'live' && rehearsalCutoff > new Date()) {
+          status = 'rehearsing';
+          broadcast = false;
+        }
+        if (stream.mode === 'record' && rehearsalCutoff > new Date()) {
+          status = 'recording';
+          broadcast = false;
+        }
+        if (stream.mode === 'record' && rehearsalCutoff < new Date()) {
+          status = 'expired';
+          broadcast = false;
+        }
+        if (new Date() > stream.end_date) {
+          status = 'expired';
+          broadcast = false;
+        }
+
+        await publish('ex-gateway', { domain, action, command, payload: data, user });
+        await publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, broadcast, status }, user });
+        if (broadcast && stream.mode === 'live') {
+          await publish('ex-streamer-encoder', { domain, action, command, payload: data, user });
+        }
+        callback();
+      } catch (error) {
+        await publish('ex-streamer-incoming', { error: error.message, domain, action, command, payload, user });
         callback(0);
       }
       break;
