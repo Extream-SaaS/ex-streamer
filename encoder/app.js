@@ -52,7 +52,7 @@ pull();
 const streamer = spawn('shaka-streamer', [
     '-itmp/input.yaml',
     '-ptmp/output.yaml',
-    '-cgs://extreamer/stream01'
+    '-cgs://exstreamer/live/STREANAME'
 ]);
 
 streamer.stdout.on("data", data => {

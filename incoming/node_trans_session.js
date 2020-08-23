@@ -11,6 +11,12 @@ const dateFormat = require('dateformat');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
 
+// Imports the Google Cloud client library
+const {Storage} = require('@google-cloud/storage');
+
+// Creates a client
+const storage = new Storage();
+
 class NodeTransSession extends EventEmitter {
   constructor(conf) {
     super();
@@ -80,15 +86,21 @@ class NodeTransSession extends EventEmitter {
       this.emit('end');
       fs.readdir(ouPath, function (err, files) {
         if (!err) {
-          files.forEach((filename) => {
-            if (filename.endsWith('.ts')
-              || filename.endsWith('.m3u8')
-              || filename.endsWith('.mpd')
-              || filename.endsWith('.m4s')
-              || filename.endsWith('.tmp')) {
+          files.forEach(async (filename) => {
+            if (filename.endsWith('.ts') ||
+              filename.endsWith('.m3u8') ||
+              filename.endsWith('.mpd') ||
+              filename.endsWith('.m4s') ||
+              filename.endsWith('.tmp')
+            ) {
               fs.unlinkSync(ouPath + '/' + filename);
+            } else {
+              // publish recording to cloud here \\
+              await storage.bucket('exstreamer').upload(`${ouPath}/${filename}`, {
+                destination: `${this.conf.streamPath}/${filename}`
+              });
             }
-          })
+          });
         }
       });
     });

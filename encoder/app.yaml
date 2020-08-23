@@ -1,3 +1,3 @@
-service: extreamer-encoder
+service: ex-streamer-encoder
 runtime: custom
 env: flex

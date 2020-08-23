@@ -105,13 +105,18 @@ const verifyUser = async (token) => {
       'Authorization': `Bearer ${token}`
     }
   };
-  const resp = await axios.get(`${exauthURL}/auth/user`, config);
-  if (resp.status !== 200) {
-    throw new Error('not logged in');
+  try {
+    const resp = await axios.get(`${exauthURL}/auth/user`, config);
+    if (resp.status !== 200) {
+      throw new Error('not logged in');
+    }
+    const exauthUser = resp.data;
+    console.log('verify url', `${exauthURL}/auth/user`);
+    return exauthUser;
+  } catch (error) {
+
   }
-  const exauthUser = resp.data;
-  return exauthUser;
-}
+};
 
 let nms = new NodeMediaServer(config);
 nms.run();
@@ -130,17 +135,23 @@ nms.on('doneConnect', (id, args) => {
 
 nms.on('prePublish', async (id, StreamPath, args) => {
   console.log('[NodeEvent on prePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
-  const token = id.split('-')[1];
-  const user = await verifyUser(token);
-  push('ex-streamer', {
-    domain: 'client',
-    action: 'rtmp',
-    command: 'activate',
-    payload: {
-      id: id.split('-')[0]
-    },
-    user
-  });
+  try {
+    const token = id.split('-')[1];
+    const user = await verifyUser(token);
+    push('ex-streamer', {
+      domain: 'client',
+      action: 'rtmp',
+      command: 'activate',
+      payload: {
+        id: id.split('-')[0]
+      },
+      user
+    });
+  } catch (error) {
+    console.log('error', error);
+    const session = nms.getSession(id);
+    session.reject();
+  }
 });
 
 nms.on('postPublish', (id, StreamPath, args) => {
