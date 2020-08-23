@@ -116,7 +116,9 @@ exports.manage = async (event, context, callback) => {
           const endDate = new Date(data.end_date);
           const rehearsalCutoff = new Date(startDate.getTime() - 30 * 60000);
           let url = process.env.EXRTMP;
-          if (data.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
+          console.log('loaded data', data);
+          console.log('start date', startDate, 'end date', endDate, 'rehearsal cut off', rehearsalCutoff);
+          if ((data.configuration.mode === 'live' || (data.configuration.mode === 'record' && data.configuration.broadcast)) && rehearsalCutoff > new Date()) {
             url += 'rehearsal';
           } else if (data.configuration.mode === 'live') {
             url += 'live';
@@ -161,7 +163,7 @@ exports.manage = async (event, context, callback) => {
         const rehearsalCutoff = new Date(startDate.getTime() - 30 * 60000);
         let status = 'live';
         let broadcast = true;
-        if (data.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
+        if ((data.configuration.mode === 'live' || (data.configuration.mode === 'record' && data.configuration.broadcast)) && rehearsalCutoff > new Date()) {
           status = 'rehearsing';
           broadcast = false;
         }
