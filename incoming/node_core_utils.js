@@ -57,8 +57,8 @@ function getFFmpegVersion(ffpath) {
     });
     ffmpeg_exec.stdout.on('data', (data) => {
       try {
-        console.log('ffmpeg found', data.toString());
-        version = data.toString().split(/(?:\r\n|\r|\n)/g)[0].split('\ ')[2];
+        // version hard coded in docker image
+        version = data.toString().split(/(?:\r\n|\r|\n)/g)[0].split('\ ')[2] || '4.3.1';
         console.log('ffmpeg version', version);
       } catch (e) {
         console.log('ffmpeg error', e);
