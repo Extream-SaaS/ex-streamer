@@ -97,10 +97,8 @@ class NodeTransSession extends EventEmitter {
             } else {
               // publish recording to cloud here \\
               try {
-                console.log('uploading', `${ouPath}/${filename}`);
-                console.log('target', `${this.conf.streamPath}/${filename}`);
                 await storage.bucket('ex-streamer').upload(`${ouPath}/${filename}`, {
-                  destination: `${this.conf.streamPath}/${filename}`
+                  destination: `${this.conf.streamPath.substr(1)}.mp4`
                 });
               } catch (error) {
                 console.log(error);

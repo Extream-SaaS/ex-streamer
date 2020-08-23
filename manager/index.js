@@ -132,6 +132,15 @@ exports.manage = async (event, context, callback) => {
           }
           data.streamkey = `${docRef.id}-${user.token}`;
           data.url = url;
+
+          await docRef.set({
+            streamkey,
+            url,
+            updatedBy: user.id,
+            updatedAt: Firestore.FieldValue.serverTimestamp()
+          }, {
+            merge: true
+          });
         }
         await publish('ex-gateway', { domain, action, command, payload: data, user, socketId });
         callback();
@@ -180,12 +189,65 @@ exports.manage = async (event, context, callback) => {
           broadcast = false;
         }
 
+        await docRef.set({
+          status,
+          streamUrl: payload.streamUrl,
+          updatedBy: user.id,
+          updatedAt: Firestore.FieldValue.serverTimestamp()
+        }, {
+          merge: true
+        });
+
         const published = [];
         published.push(publish('ex-gateway', { domain, action, command, payload: data, user }));
         published.push(publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, broadcast, status }, user }));
         if (broadcast) {
           // fire up the listener to encode to the bucket
           published.push(publish('ex-streamer-encoder', { domain, action, command, payload: data, user }));
+        }
+        await Promise.all(published);
+        callback();
+      } catch (error) {
+        await publish('ex-streamer-incoming', { error: error.message, domain, action, command, payload, user });
+        callback(0);
+      }
+      break;
+    case 'complete':
+      try {
+        // this is only available for client domain \\
+        if (domain !== 'client') {
+          throw new Error('only clients complete');
+        }
+        const docRef = db.collection('streams').doc(payload.id);
+        const stream = await docRef.get();
+        
+        if (!stream.exists) {
+          throw new Error('item not found');
+        }
+
+        let data = stream.data();
+        const updated = {
+          status: 'complete'
+        };
+
+        if (data.config.mode === 'record') {
+          updated.recordingUrl = [process.env.EXSTREAMER, payload.streamUrl[1]];
+        }
+        
+        await docRef.set({
+          ...updated,
+          updatedBy: user.id,
+          updatedAt: Firestore.FieldValue.serverTimestamp()
+        }, {
+          merge: true
+        });
+
+        const published = [];
+        published.push(publish('ex-gateway', { domain, action, command, payload: { ...data, ...updated }, user }));
+        published.push(publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, ...updated }, user }));
+        if (broadcast) {
+          // fire up the listener to encode to the bucket
+          published.push(publish('ex-streamer-encoder', { domain, action, command, payload: { ...data, ...updated }, user }));
         }
         await Promise.all(published);
         callback();

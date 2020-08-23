@@ -180,7 +180,7 @@ nms.on('donePublish', (id, StreamPath, args) => {
     payload: {
       id: userId.split('-')[0],
       sessionId: id,
-      streamUrl: `${exstreamerURL}${StreamPath}`
+      streamUrl: [exstreamerURL, StreamPath]
     },
     user
   });
