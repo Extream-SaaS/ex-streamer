@@ -130,7 +130,7 @@ exports.manage = async (event, context, callback) => {
           if (new Date() > endDate) {
             url = 'expired';
           }
-          data.streamkey = `${docRef.id}|${user.token}`;
+          data.streamkey = `${docRef.id}-${user.token}`;
           data.url = url;
         }
         await publish('ex-gateway', { domain, action, command, payload: data, user, socketId });
