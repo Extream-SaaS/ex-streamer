@@ -112,8 +112,8 @@ exports.manage = async (event, context, callback) => {
           }
           // generate the URL to use \\
           // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
-          const startDate = new Date(data.start_date);
-          const endDate = new Date(data.end_date);
+          const startDate = data.start_date.toDate();
+          const endDate = data.end_date.toDate();
           const rehearsalCutoff = new Date(startDate.getTime() - 30 * 60000);
           let url = process.env.EXRTMP;
           console.log('loaded data', data);
@@ -159,8 +159,8 @@ exports.manage = async (event, context, callback) => {
         }
 
         let data = stream.data();
-        const startDate = new Date(data.start_date);
-        const endDate = new Date(data.end_date);
+        const startDate = data.start_date.toDate();
+        const endDate = data.end_date.toDate();
 
         // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
         const rehearsalCutoff = new Date(startDate.getTime() - 30 * 60000);
