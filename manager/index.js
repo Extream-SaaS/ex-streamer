@@ -121,7 +121,7 @@ exports.manage = async (event, context, callback) => {
           } else if (data.configuration.mode === 'live') {
             url += 'live';
           }
-          if (data.configuration.mode === 'record' && ((!data.configuration.broadcast && rehearsalCutoff > new Date())) || (data.configuration.broadcast && rehearsalCutoff > new Date())) {
+          if (data.configuration.mode === 'record' && ((!data.configuration.broadcast && rehearsalCutoff > new Date())) || (data.configuration.broadcast && rehearsalCutoff < new Date())) {
             url += 'recorder';
           }
           if (data.configuration.mode === 'record' && !data.configuration.broadcast && rehearsalCutoff < new Date()) {
@@ -165,7 +165,7 @@ exports.manage = async (event, context, callback) => {
           status = 'rehearsing';
           broadcast = false;
         }
-        if (data.configuration.mode === 'record' && ((!data.configuration.broadcast && rehearsalCutoff > new Date())) || (data.configuration.broadcast && rehearsalCutoff > new Date())) {
+        if (data.configuration.mode === 'record' && ((!data.configuration.broadcast && rehearsalCutoff > new Date())) || (data.configuration.broadcast && rehearsalCutoff < new Date())) {
           status = 'recording';
           if (!data.configuration.broadcast) {
             broadcast = false;
