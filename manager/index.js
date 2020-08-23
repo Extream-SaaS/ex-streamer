@@ -119,11 +119,14 @@ exports.manage = async (event, context, callback) => {
           console.log('loaded data', data);
           console.log('start date', startDate, 'end date', endDate, 'rehearsal cut off', rehearsalCutoff);
           if ((data.configuration.mode === 'live' || (data.configuration.mode === 'record' && data.configuration.broadcast)) && rehearsalCutoff > new Date()) {
+            console.log('rehearse');
             url += 'rehearsal';
           } else if (data.configuration.mode === 'live') {
+            console.log('live');
             url += 'live';
           }
           if (data.configuration.mode === 'record' && ((!data.configuration.broadcast && rehearsalCutoff > new Date())) || (data.configuration.broadcast && rehearsalCutoff > new Date())) {
+            console.log('recording');
             url += 'recorder';
           }
           if (data.configuration.mode === 'record' && rehearsalCutoff < new Date()) {
