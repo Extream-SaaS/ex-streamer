@@ -81,7 +81,7 @@ function pull(
     const body = message.data ? JSON.parse(Buffer.from(message.data, 'base64').toString()) : null;
     console.log(body);
     if (body.error || body.status === 'expired') {
-      const session = nms.getSession(`${payload.id}-${user.token}`);
+      const session = nms.getSession(`${body.payload.sessionId}`);
       session.reject();
       console.log('rejecting session');
     }
@@ -136,14 +136,17 @@ nms.on('doneConnect', (id, args) => {
 nms.on('prePublish', async (id, StreamPath, args) => {
   console.log('[NodeEvent on prePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
   try {
-    const token = id.split('-')[1];
+    const StreamObj = StreamPath.split('/');
+    const userId = StreamObj[StreamObj.length - 1];
+    const token = userId.split('-')[1];
     const user = await verifyUser(token);
     push('ex-streamer', {
       domain: 'client',
       action: 'rtmp',
       command: 'activate',
       payload: {
-        id: id.split('-')[0]
+        id: userId.split('-')[0],
+        sessionId: id
       },
       user
     });
