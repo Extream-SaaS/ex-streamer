@@ -4,6 +4,8 @@
 const {PubSub} = require('@google-cloud/pubsub');
 const grpc = require('grpc');
 const projectId = 'stoked-reality-284921';
+const axios = require('axios');
+const exauthURL = process.env.EXAUTH;
 
 // Instantiates a client
 const pubsub = new PubSub({grpc, projectId});
@@ -93,6 +95,20 @@ function pull(
 }
 
 pull();
+
+const verifyUser = async (token) => {
+  const config = {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  };
+  const resp = await axios.get(`${exauthURL}/auth/user`, config);
+  if (resp.status !== 200) {
+    throw new Error('not logged in');
+  }
+  const exauthUser = resp.data;
+  return exauthUser;
+}
 
 let nms = new NodeMediaServer(config);
 nms.run();
