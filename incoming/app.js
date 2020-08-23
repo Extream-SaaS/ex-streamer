@@ -6,9 +6,9 @@ const grpc = require('grpc');
 const projectId = 'stoked-reality-284921';
 const axios = require('axios');
 const exauthURL = process.env.EXAUTH;
+const exstreamerURL = process.env.EXSTREAMER;
 
 // TODO: send the pod IP address or other identifier so that when receiving requests, check the identifier to ensure this pod is the right one for that made the request.
-// TODO: investigate uploading to gcloud issue for recordings - think its an issue with IAM role.
 
 // Instantiates a client
 const pubsub = new PubSub({grpc, projectId});
@@ -151,7 +151,8 @@ nms.on('prePublish', async (id, StreamPath, args) => {
       command: 'activate',
       payload: {
         id: userId.split('-')[0],
-        sessionId: id
+        sessionId: id,
+        streamUrl: `${exstreamerURL}${StreamPath}`
       },
       user
     });
@@ -170,6 +171,19 @@ nms.on('postPublish', (id, StreamPath, args) => {
 
 nms.on('donePublish', (id, StreamPath, args) => {
   console.log('[NodeEvent on donePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+  const StreamObj = StreamPath.split('/');
+  const userId = StreamObj[StreamObj.length - 1];
+  push('ex-streamer', {
+    domain: 'client',
+    action: 'rtmp',
+    command: 'complete',
+    payload: {
+      id: userId.split('-')[0],
+      sessionId: id,
+      streamUrl: `${exstreamerURL}${StreamPath}`
+    },
+    user
+  });
 });
 
 nms.on('prePlay', (id, StreamPath, args) => {
