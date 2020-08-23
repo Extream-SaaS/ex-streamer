@@ -112,7 +112,9 @@ exports.manage = async (event, context, callback) => {
           }
           // generate the URL to use \\
           // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
-          const rehearsalCutoff = new Date((new Date(data.start_date)).getTime() - 30 * 60000);
+          const startDate = new Date(data.start_date);
+          const endDate = new Date(data.end_date);
+          const rehearsalCutoff = new Date(startDate.getTime() - 30 * 60000);
           let url = process.env.EXRTMP;
           if (data.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
             url += 'rehearsal';
@@ -125,7 +127,7 @@ exports.manage = async (event, context, callback) => {
           if (data.configuration.mode === 'record' && rehearsalCutoff < new Date()) {
             url = 'expired';
           }
-          if (new Date() > data.end_date) {
+          if (new Date() > endDate) {
             url = 'expired';
           }
           data.streamkey = `${docRef.id}|${user.token}`;
@@ -152,10 +154,11 @@ exports.manage = async (event, context, callback) => {
         }
 
         let data = stream.data();
-        console.log('data', data);
+        const startDate = new Date(data.start_date);
+        const endDate = new Date(data.end_date);
 
         // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
-        const rehearsalCutoff = new Date((new Date(data.start_date)).getTime() - 30 * 60000);
+        const rehearsalCutoff = new Date(startDate.getTime() - 30 * 60000);
         let status = 'live';
         let broadcast = true;
         if (data.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
@@ -172,7 +175,7 @@ exports.manage = async (event, context, callback) => {
           status = 'expired';
           broadcast = false;
         }
-        if (new Date() > data.end_date) {
+        if (new Date() > endDate) {
           status = 'expired';
           broadcast = false;
         }
