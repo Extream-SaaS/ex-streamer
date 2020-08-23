@@ -41,8 +41,6 @@ const config = {
         vcParam: [],
         ac: "aac",
         acParam: ['-ab', '64k', '-ac', '1', '-ar', '44100'],
-        rtmp:true,
-        rtmpApp:'preview',
         hls: true,
         hlsFlags: '[hls_time=2:hls_list_size=3:hls_flags=delete_segments]',
         dash: true,

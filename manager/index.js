@@ -99,22 +99,24 @@ exports.manage = async (event, context, callback) => {
       try {
         const docRef = db.collection('streams').doc(payload.id);
         const stream = await docRef.get();
-
-        console.log('stream', stream.data());
         
         if (!stream.exists) {
           throw new Error('item not found');
         }
 
-        let data = stream.data();  
-        console.log('data', data);
+        let data = stream.data();
         if (domain === 'client') {
+          if (data.configuration.actor !== user.id) {
+            throw new Error('not a designated actor');
+          }
           // generate the URL to use \\
           // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
           const rehearsalCutoff = new Date((new Date(data.start_date)).getTime() - 30 * 60000);
           let url = process.env.EXRTMP;
           if (data.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
-            url += 'reheardal';
+            url += 'rehearsal';
+          } else if (data.configuration.mode === 'live') {
+            url += 'live';
           }
           if (data.configuration.mode === 'record' && rehearsalCutoff > new Date()) {
             url += 'recorder';
@@ -125,7 +127,7 @@ exports.manage = async (event, context, callback) => {
           if (new Date() > data.end_date) {
             url = 'expired';
           }
-          data.authkey = `${data.id}|${user.token}`;
+          data.streamkey = `${docRef.id}|${user.token}`;
           data.url = url;
         }
         await publish('ex-gateway', { domain, action, command, payload: data, user, socketId });
@@ -161,7 +163,9 @@ exports.manage = async (event, context, callback) => {
         }
         if (data.configuration.mode === 'record' && rehearsalCutoff > new Date()) {
           status = 'recording';
-          broadcast = false;
+          if (!data.configuration.broadcast) {
+            broadcast = false;
+          }
         }
         if (data.configuration.mode === 'record' && rehearsalCutoff < new Date()) {
           status = 'expired';
@@ -172,11 +176,14 @@ exports.manage = async (event, context, callback) => {
           broadcast = false;
         }
 
-        await publish('ex-gateway', { domain, action, command, payload: data, user });
-        await publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, broadcast, status }, user });
-        if (broadcast && data.configuration.mode === 'live') {
-          await publish('ex-streamer-encoder', { domain, action, command, payload: data, user });
+        const published = [];
+        published.push(publish('ex-gateway', { domain, action, command, payload: data, user }));
+        published.push(publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, broadcast, status }, user }));
+        if (broadcast) {
+          // fire up the listener to encode to the bucket
+          published.push(publish('ex-streamer-encoder', { domain, action, command, payload: data, user }));
         }
+        await Promise.all(published);
         callback();
       } catch (error) {
         await publish('ex-streamer-incoming', { error: error.message, domain, action, command, payload, user });
