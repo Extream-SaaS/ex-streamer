@@ -12,6 +12,11 @@
   "author": "Rich <rich@extream.app>",
   "license": "ISC",
   "devDependencies": {
+    "dotenv": "^8.2.0",
     "nodemon": "^2.0.4"
+  },
+  "dependencies": {
+    "@google-cloud/pubsub": "^2.5.0",
+    "grpc": "^1.24.3"
   }
 }

@@ -2,7 +2,7 @@ FROM gcr.io/google_appengine/python
 
 ARG packager_version=v2.4.3
 ARG google_project_id=stoked-reality-284921
-ARG google_service_account=Core-3acc2acfa4ed.json
+ARG google_service_account=stoked-reality.json
 ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64
 
 
@@ -22,7 +22,7 @@ COPY . .
 RUN npm install pm2 -g
 RUN npm ci
 RUN pip3 install --upgrade shaka-streamer
-RUN gcloud auth activate-service-account --key-file=service-account/${google_service_account} --project=${google_project_id}
+RUN gcloud auth activate-service-account --key-file=service-accounts/${google_service_account} --project=${google_project_id}
 
 EXPOSE 8888
 CMD ["npm", "start"]
