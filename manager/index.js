@@ -34,6 +34,7 @@ exports.manage = async (event, context, callback) => {
   const db = new Firestore({
     projectId,
   });
+  console.log('message', message);
   if (message.payload.start_date) {
     message.payload.start_date = Firestore.Timestamp.fromDate(new Date(Date.parse(message.payload.start_date)));
   }
