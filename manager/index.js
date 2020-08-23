@@ -99,17 +99,20 @@ exports.manage = async (event, context, callback) => {
       try {
         const docRef = db.collection('streams').doc(payload.id);
         const stream = await docRef.get();
+
+        console.log('stream', docRef.data());
         
         if (!stream.exists) {
           throw new Error('item not found');
         }
 
         let data = stream.data();  
+        console.log('data', data);
         if (domain === 'client') {
           // generate the URL to use \\
           // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
           const rehearsalCutoff = new Date((new Date(data.start_date)).getTime() - 30 * 60000);
-          let url = 'rtmp://incoming.stream.extream.app/';
+          let url = process.env.EXRTMP;
           if (data.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
             url += 'reheardal';
           }
