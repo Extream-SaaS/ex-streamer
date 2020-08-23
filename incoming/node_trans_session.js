@@ -96,9 +96,15 @@ class NodeTransSession extends EventEmitter {
               fs.unlinkSync(ouPath + '/' + filename);
             } else {
               // publish recording to cloud here \\
-              await storage.bucket('exstreamer').upload(`${ouPath}/${filename}`, {
-                destination: `${this.conf.streamPath}/${filename}`
-              });
+              try {
+                console.log('uploading', `${ouPath}/${filename}`);
+                console.log('target', `${this.conf.streamPath}/${filename}`);
+                await storage.bucket('ex-streamer').upload(`${ouPath}/${filename}`, {
+                  destination: `${this.conf.streamPath}/${filename}`
+                });
+              } catch (error) {
+                console.log(error);
+              }
             }
           });
         }

@@ -7,6 +7,9 @@ const projectId = 'stoked-reality-284921';
 const axios = require('axios');
 const exauthURL = process.env.EXAUTH;
 
+// TODO: send the pod IP address or other identifier so that when receiving requests, check the identifier to ensure this pod is the right one for that made the request.
+// TODO: investigate uploading to gcloud issue for recordings - think its an issue with IAM role.
+
 // Instantiates a client
 const pubsub = new PubSub({grpc, projectId});
 
@@ -82,7 +85,9 @@ function pull(
     console.log(body);
     if (body.error || body.status === 'expired') {
       const session = nms.getSession(`${body.payload.sessionId}`);
-      session.reject();
+      if (session) {
+        session.reject();
+      }
       console.log('rejecting session');
     }
     // "Ack" (acknowledge receipt of) the message
