@@ -121,6 +121,7 @@ exports.manage = async (event, context, callback) => {
           if (new Date() > stream.end_date) {
             url = 'expired';
           }
+          data.authkey = `${stream.id}|${user.token}`;
           data.url = url;
         }
         await publish('ex-gateway', { domain, action, command, payload: data, user, socketId });
