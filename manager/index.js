@@ -108,7 +108,7 @@ exports.manage = async (event, context, callback) => {
         if (domain === 'client') {
           // generate the URL to use \\
           // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
-          const rehearsalCutoff = new Date(data.start_date.getTime() - 30 * 60000);
+          const rehearsalCutoff = new Date((new Date(data.start_date)).getTime() - 30 * 60000);
           let url = 'rtmp://incoming.stream.extream.app/';
           if (data.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
             url += 'reheardal';
@@ -149,7 +149,7 @@ exports.manage = async (event, context, callback) => {
         console.log('data', data);
 
         // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
-        const rehearsalCutoff = new Date(data.start_date.getTime() - 30 * 60000);
+        const rehearsalCutoff = new Date((new Date(data.start_date)).getTime() - 30 * 60000);
         let status = 'live';
         let broadcast = true;
         if (data.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
