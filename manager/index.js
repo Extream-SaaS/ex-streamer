@@ -100,7 +100,7 @@ exports.manage = async (event, context, callback) => {
         const docRef = db.collection('streams').doc(payload.id);
         const stream = await docRef.get();
 
-        console.log('stream', docRef.data());
+        console.log('stream', stream.data());
         
         if (!stream.exists) {
           throw new Error('item not found');
