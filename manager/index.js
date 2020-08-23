@@ -71,7 +71,8 @@ exports.manage = async (event, context, callback) => {
           merge: true
         });
     
-        await publish('ex-gateway', { domain, action, command, payload: { ...payload }, user, socketId });
+        const messageId = await publish('ex-gateway', { domain, action, command, payload, user, socketId });
+        console.log(messageId, 'ex-gateway', { domain, action, command, payload, user, socketId });
         callback();
       } catch (error) {
         await publish('ex-gateway', { error: error.message, domain, action, command, payload, user, socketId });
