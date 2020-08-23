@@ -1,13 +1,16 @@
 # Extreamer
 
 ## Manager API
+
 * RESTful API for managing streams and their consumers
 * App Engine serverless functions
 * Data stored in Firestore
 
 ### Commands
+
 * Create RTMP stream
   * Payload
+
     ```json
     {
       "activation": "datetime",
@@ -17,8 +20,10 @@
       "dedicated": true
     }
     ```
+
     If `dedicated` is set to `true` then we create a dedicated node in the cluster. Otherwise, we will use a shared node.
   * Returns:
+  
     ```json
     {
       "id": "uuid",
@@ -30,8 +35,10 @@
       }
     }
     ```
+
 * Update RTMP stream
   * Payload
+
     ```json
     {
       "activation": "datetime",
@@ -41,8 +48,10 @@
       "dedicated": true
     }
     ```
+
     If `dedicated` is set to `true` then we create a dedicated node in the cluster. Otherwise, we will use a shared node.
   * Returns:
+
     ```json
     {
       "id": "uuid",
@@ -54,8 +63,10 @@
       }
     }
     ```
+
 * Upload VOD file
   * Payload (multipart/form-data)
+
     ```form-data
     file=BINARY_CONTENT
     name=string
@@ -63,22 +74,29 @@
     duration=integer
     breakpoints[]=array of bitrate versions
     ```
- * Returns:
+
+  * Returns:
+
     ```json
     {
       "id": "uuid",
       "outbound_url": "a DASH manifest URL",
       "expiration": "datetime"
     }
+    ```
+
 ## Inbound Content
+
 * A node.js docker container with node-media-server
   * Single-tenant - docker container created for each RTMP creation
 
 ## Encoder
+
 * App Engine node.js / ffmpeg API to create a stream and push it to Outbound shaka packager
 
 ## Outbound Content
+
 * On demand docker container with shaka packager installed to convert a UDP stream or video file to a DASH manifest and media segments
 * Media segments and DASH manifest uploaded to cloud storage
-* https://google.github.io/shaka-packager/html/tutorials/live.html#examples
+* <https://google.github.io/shaka-packager/html/tutorials/live.html#examples>
 * Front-end library to use Shaka Player to consume DASH manifest
