@@ -109,13 +109,13 @@ exports.manage = async (event, context, callback) => {
           // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
           const rehearsalCutoff = new Date(stream.start_date.getTime() - 30 * 60000);
           let url = 'rtmp://incoming.stream.extream.app/';
-          if (stream.mode === 'live' && rehearsalCutoff > new Date()) {
+          if (stream.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
             url += 'reheardal';
           }
-          if (stream.mode === 'record' && rehearsalCutoff > new Date()) {
+          if (stream.configuration.mode === 'record' && rehearsalCutoff > new Date()) {
             url += 'recorder';
           }
-          if (stream.mode === 'record' && rehearsalCutoff < new Date()) {
+          if (stream.configuration.mode === 'record' && rehearsalCutoff < new Date()) {
             url = 'expired';
           }
           if (new Date() > stream.end_date) {
@@ -149,15 +149,15 @@ exports.manage = async (event, context, callback) => {
         const rehearsalCutoff = new Date(stream.start_date.getTime() - 30 * 60000);
         let status = 'live';
         let broadcast = true;
-        if (stream.mode === 'live' && rehearsalCutoff > new Date()) {
+        if (stream.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
           status = 'rehearsing';
           broadcast = false;
         }
-        if (stream.mode === 'record' && rehearsalCutoff > new Date()) {
+        if (stream.configuration.mode === 'record' && rehearsalCutoff > new Date()) {
           status = 'recording';
           broadcast = false;
         }
-        if (stream.mode === 'record' && rehearsalCutoff < new Date()) {
+        if (stream.configuration.mode === 'record' && rehearsalCutoff < new Date()) {
           status = 'expired';
           broadcast = false;
         }
@@ -168,7 +168,7 @@ exports.manage = async (event, context, callback) => {
 
         await publish('ex-gateway', { domain, action, command, payload: data, user });
         await publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, broadcast, status }, user });
-        if (broadcast && stream.mode === 'live') {
+        if (broadcast && stream.configuration.mode === 'live') {
           await publish('ex-streamer-encoder', { domain, action, command, payload: data, user });
         }
         callback();
