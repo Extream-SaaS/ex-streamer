@@ -108,21 +108,21 @@ exports.manage = async (event, context, callback) => {
         if (domain === 'client') {
           // generate the URL to use \\
           // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
-          const rehearsalCutoff = new Date(stream.start_date.getTime() - 30 * 60000);
+          const rehearsalCutoff = new Date(data.start_date.getTime() - 30 * 60000);
           let url = 'rtmp://incoming.stream.extream.app/';
-          if (stream.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
+          if (data.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
             url += 'reheardal';
           }
-          if (stream.configuration.mode === 'record' && rehearsalCutoff > new Date()) {
+          if (data.configuration.mode === 'record' && rehearsalCutoff > new Date()) {
             url += 'recorder';
           }
-          if (stream.configuration.mode === 'record' && rehearsalCutoff < new Date()) {
+          if (data.configuration.mode === 'record' && rehearsalCutoff < new Date()) {
             url = 'expired';
           }
-          if (new Date() > stream.end_date) {
+          if (new Date() > data.end_date) {
             url = 'expired';
           }
-          data.authkey = `${stream.id}|${user.token}`;
+          data.authkey = `${data.id}|${user.token}`;
           data.url = url;
         }
         await publish('ex-gateway', { domain, action, command, payload: data, user, socketId });
@@ -146,31 +146,32 @@ exports.manage = async (event, context, callback) => {
         }
 
         let data = stream.data();
+        console.log('data', data);
 
         // check that the start_date and end_date are valid in current range, otherwise don't encode, just provide single use streaming from NMS.
-        const rehearsalCutoff = new Date(stream.start_date.getTime() - 30 * 60000);
+        const rehearsalCutoff = new Date(data.start_date.getTime() - 30 * 60000);
         let status = 'live';
         let broadcast = true;
-        if (stream.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
+        if (data.configuration.mode === 'live' && rehearsalCutoff > new Date()) {
           status = 'rehearsing';
           broadcast = false;
         }
-        if (stream.configuration.mode === 'record' && rehearsalCutoff > new Date()) {
+        if (data.configuration.mode === 'record' && rehearsalCutoff > new Date()) {
           status = 'recording';
           broadcast = false;
         }
-        if (stream.configuration.mode === 'record' && rehearsalCutoff < new Date()) {
+        if (data.configuration.mode === 'record' && rehearsalCutoff < new Date()) {
           status = 'expired';
           broadcast = false;
         }
-        if (new Date() > stream.end_date) {
+        if (new Date() > data.end_date) {
           status = 'expired';
           broadcast = false;
         }
 
         await publish('ex-gateway', { domain, action, command, payload: data, user });
         await publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, broadcast, status }, user });
-        if (broadcast && stream.configuration.mode === 'live') {
+        if (broadcast && data.configuration.mode === 'live') {
           await publish('ex-streamer-encoder', { domain, action, command, payload: data, user });
         }
         callback();
