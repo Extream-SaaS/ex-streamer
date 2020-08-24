@@ -60,6 +60,12 @@ function pull(
         // if activate then run
         // if complete then find the running process and kill it
         if (body.command === 'activate') {
+            if (!body.user) {
+                // its a message that doesn't contain everything
+                console.log(body);
+                message.ack();
+                return true;
+            }
             // generate the yaml files
             if (!fs.existsSync(`${dir}/${body.payload.id}-${body.user.token}`)){
                 fs.mkdirSync(`${dir}/${body.payload.id}-${body.user.token}`);

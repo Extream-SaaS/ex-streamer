@@ -116,6 +116,8 @@ exports.manage = async (event, context, callback) => {
           const endDate = data.end_date.toDate();
           const rehearsalCutoff = new Date(startDate.getTime() - 30 * 60000);
           let url = process.env.EXRTMP;
+          const streamkey = `${docRef.id}-${user.token}`;
+          
           if ((data.configuration.mode === 'live' || (data.configuration.mode === 'record' && data.configuration.broadcast)) && rehearsalCutoff > new Date()) {
             url += 'rehearsal';
           } else if (data.configuration.mode === 'live') {
@@ -130,7 +132,7 @@ exports.manage = async (event, context, callback) => {
           if (new Date() > endDate) {
             url = 'expired';
           }
-          data.streamkey = `${docRef.id}-${user.token}`;
+          data.streamkey = streamkey;
           data.url = url;
 
           await docRef.set({
