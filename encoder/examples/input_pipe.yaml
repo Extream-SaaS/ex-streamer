@@ -1,3 +1,0 @@
-inputs:
-  - name: rtmp://incoming.stream.extream.app/live/stream01
-    media_type: video

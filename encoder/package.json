@@ -4,8 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "pm2-runtime app.js",
-    "dev": "nodemon app",
+    "start": "NODE_ENV=production pm2-runtime app.js",
+    "dev": "NODE_ENV=development nodemon app",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

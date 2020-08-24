@@ -15,8 +15,8 @@ RUN apt-get update -qq && apt-get -y install python3-yaml nodejs expat libgomp1 
 
 RUN wget https://github.com/google/shaka-packager/releases/download/${packager_version}/packager-linux
 RUN install -m 755 packager-linux /usr/bin/packager
-RUN mkdir /opt/worker
-WORKDIR /opt/worker
+RUN mkdir /opt/encoder
+WORKDIR /opt/encoder
 COPY --from=jrottenberg/ffmpeg:4.3.1-ubuntu1604 /usr/local/ /usr/local/
 COPY . .
 RUN npm install pm2 -g

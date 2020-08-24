@@ -199,11 +199,11 @@ exports.manage = async (event, context, callback) => {
         });
 
         const published = [];
-        published.push(publish('ex-gateway', { domain, action, command, payload: data, user }));
-        published.push(publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, broadcast, status }, user }));
+        published.push(publish('ex-gateway', { domain, action, command, payload: { ...payload, ...data }, user }));
+        published.push(publish('ex-streamer-incoming', { domain, action, command, payload: { ...payload, ...data, broadcast, status }, user }));
         if (broadcast) {
           // fire up the listener to encode to the bucket
-          published.push(publish('ex-streamer-encoder', { domain, action, command, payload: data, user }));
+          published.push(publish('ex-streamer-encoder', { domain, action, command, payload: { ...payload, ...data }, user }));
         }
         await Promise.all(published);
         callback();
