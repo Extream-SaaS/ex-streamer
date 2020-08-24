@@ -110,17 +110,13 @@ const verifyUser = async (token) => {
       'Authorization': `Bearer ${token}`
     }
   };
-  try {
-    const resp = await axios.get(`${exauthURL}/auth/user`, config);
-    if (resp.status !== 200) {
-      throw new Error('not logged in');
-    }
-    const exauthUser = resp.data;
-    console.log('verify url', `${exauthURL}/auth/user`);
-    return exauthUser;
-  } catch (error) {
-
+  const resp = await axios.get(`${exauthURL}/auth/user`, config);
+  if (resp.status !== 200) {
+    throw new Error('not logged in');
   }
+  const exauthUser = resp.data;
+  console.log('verify url', `${exauthURL}/auth/user`);
+  return exauthUser;
 };
 
 let nms = new NodeMediaServer(config);
@@ -171,19 +167,27 @@ nms.on('postPublish', (id, StreamPath, args) => {
 
 nms.on('donePublish', (id, StreamPath, args) => {
   console.log('[NodeEvent on donePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
-  const StreamObj = StreamPath.split('/');
-  const userId = StreamObj[StreamObj.length - 1];
-  push('ex-streamer', {
-    domain: 'client',
-    action: 'rtmp',
-    command: 'complete',
-    payload: {
-      id: userId.split('-')[0],
-      sessionId: id,
-      streamUrl: [exstreamerURL, StreamPath]
-    },
-    user
-  });
+  try {
+    const StreamObj = StreamPath.split('/');
+    const userId = StreamObj[StreamObj.length - 1];
+    const token = userId.split('-')[1];
+    const user = await verifyUser(token);
+    push('ex-streamer', {
+      domain: 'client',
+      action: 'rtmp',
+      command: 'complete',
+      payload: {
+        id: userId.split('-')[0],
+        sessionId: id,
+        streamUrl: [exstreamerURL, StreamPath]
+      },
+      user
+    });
+  } catch (error) {
+    console.log('error', error);
+    const session = nms.getSession(id);
+    session.reject();
+  }
 });
 
 nms.on('prePlay', (id, StreamPath, args) => {
