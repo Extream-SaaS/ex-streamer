@@ -165,7 +165,7 @@ nms.on('postPublish', (id, StreamPath, args) => {
   
 });
 
-nms.on('donePublish', (id, StreamPath, args) => {
+nms.on('donePublish', async (id, StreamPath, args) => {
   console.log('[NodeEvent on donePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
   try {
     const StreamObj = StreamPath.split('/');

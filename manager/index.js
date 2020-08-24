@@ -232,7 +232,7 @@ exports.manage = async (event, context, callback) => {
           status: 'complete'
         };
 
-        if (data.config.mode === 'record') {
+        if (data.configuration.mode === 'record') {
           updated.recordingUrl = [process.env.EXSTREAMER, payload.streamUrl[1]];
         }
         
@@ -248,7 +248,7 @@ exports.manage = async (event, context, callback) => {
         published.push(publish('ex-gateway', { domain, action, command, payload: { ...data, ...updated }, user }));
         published.push(publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, ...updated }, user }));
         if (broadcast) {
-          // fire up the listener to encode to the bucket
+          // mark this as complete and end the encoding listener
           published.push(publish('ex-streamer-encoder', { domain, action, command, payload: { ...data, ...updated }, user }));
         }
         await Promise.all(published);
