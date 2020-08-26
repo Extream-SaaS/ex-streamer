@@ -17,8 +17,8 @@ video_codecs:
 
 # Manifest format (dash, hls, or both)
 manifest_format:
-  - dash
-  # - hls
+  # - dash
+  - hls
 
 # Length of each segment in seconds.
 segment_size: 4
