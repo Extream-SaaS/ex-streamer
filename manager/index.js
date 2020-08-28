@@ -123,14 +123,18 @@ exports.manage = async (event, context, callback) => {
           
           if ((data.configuration.mode === 'live' || (data.configuration.mode === 'record' && data.configuration.broadcast)) && rehearsalCutoff > new Date()) {
             url += 'rehearsal';
+            data.rehearsalCutoff = rehearsalCutoff;
           } else if (data.configuration.mode === 'live') {
             url += 'live';
+            data.rehearsalCutoff = rehearsalCutoff;
           }
           if (data.configuration.mode === 'record' && ((!data.configuration.broadcast && rehearsalCutoff > new Date())) || (data.configuration.broadcast && rehearsalCutoff < new Date())) {
             url += 'recorder';
+            data.recordingCutoff = rehearsalCutoff;
           }
           if (data.configuration.mode === 'record' && !data.configuration.broadcast && rehearsalCutoff < new Date()) {
             url = 'expired';
+            data.recordingCutoff = rehearsalCutoff;
           }
           if (new Date() > endDate) {
             url = 'expired';
