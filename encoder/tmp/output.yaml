@@ -21,13 +21,13 @@ manifest_format:
   - hls
 
 # Length of each segment in seconds.
-segment_size: 4
+segment_size: 8
 
 # Availability window, or the number of seconds a segment remains available.
 availability_window: 300
 
 # Presentation delay, or how far back from the edge the player should be.
-presentation_delay: 5
+presentation_delay: 20
 
 # Update period, or how often the player should fetch a new manifest.
 update_period: 8

@@ -51,7 +51,8 @@ exports.manage = async (event, context, callback) => {
           addedBy: user.id,
           addedAt: Firestore.FieldValue.serverTimestamp()
         });
-   
+        // send a message to the manager to add this itinerary item to the itinerary
+        await publish('ex-manage', { domain, action, command, payload: { ...payload, id: docRef.id }, user, socketId });
         await publish('ex-gateway', { domain, action, command, payload: { ...payload, id: docRef.id }, user, socketId });
         callback();
       } catch (error) {
