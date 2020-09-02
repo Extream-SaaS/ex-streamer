@@ -5,7 +5,7 @@
   "main": "node_media_server.js",
   "scripts": {
     "start": "node app.js",
-    "test": "node app.js"
+    "test": "echo \"Error: no test specified\""
   },
   "repository": {
     "type": "git",
