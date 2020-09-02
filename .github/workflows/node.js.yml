@@ -32,6 +32,8 @@ jobs:
         with:
           username: _json_key
           password: ${{ secrets.CONTAINER_REGISTRY_SERVICE_ACCOUNT_CREDENTIALS }}
+          path: incoming
+          dockerfile: incoming/Dockerfile
           registry: gcr.io
           repository: stoked-reality-284921/extreamer-encoder
           build_args: GCLOUD_AUTH=${{ secrets.DEFAULT_SERVICE_ACCOUNT_CREDENTIALS }}
