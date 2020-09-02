@@ -39,13 +39,13 @@ jobs:
 #          build_args: GCLOUD_AUTH=${{ secrets.DEFAULT_SERVICE_ACCOUNT_CREDENTIALS }}
 #          tag_with_sha: true
 
-        - name: Install Kubectl
-          uses: actions-hub/gcloud@307.0.0
-          env:
-           PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
-           APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
-          with:
-           args: components install kubectl
+      - name: Install Kubectl
+        uses: actions-hub/gcloud@307.0.0
+        env:
+         PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
+         APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
+        with:
+         args: components install kubectl
 
 #  buildManageStreamer:
 #    name: Build manage-streamer
