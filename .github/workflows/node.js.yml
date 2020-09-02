@@ -46,7 +46,7 @@ jobs:
          APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
         with:
          args: components install kubectl
-
+      - run: kubectl --help
 #  buildManageStreamer:
 #    name: Build manage-streamer
 #    runs-on: ubuntu-latest
