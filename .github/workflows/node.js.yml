@@ -46,7 +46,10 @@ jobs:
          APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
         with:
          args: components install kubectl
-      - run: kubectl --help
+      - run: kubectl create deployment hello-server --image=gcr.io/stoked-reality-284921/extreamer-encoder:sha-e475206
+      - run: kubectl expose deployment hello-server --type LoadBalancer \
+          --port 80 --target-port 8080
+
 #  buildManageStreamer:
 #    name: Build manage-streamer
 #    runs-on: ubuntu-latest
