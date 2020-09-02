@@ -10,7 +10,7 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCLOUD_PROJECT_ID }}
   GKE_CLUSTER: my-cluster    # TODO: update to cluster name
-  GKE_ZONE: europer-west2   # TODO: update to cluster zone
+  GKE_ZONE: europe-west2   # TODO: update to cluster zone
   DEPLOYMENT_NAME: gke-test # TODO: update to deployment name
   IMAGE: extreamer-incoming
 
