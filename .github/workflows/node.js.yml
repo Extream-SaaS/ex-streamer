@@ -49,13 +49,13 @@ jobs:
         with:
          args: components install kubectl
 
-      - name: Create Cluster
-        uses: actions-hub/gcloud@307.0.0
-        env:
-          PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
-          APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
-        with:
-          args: container clusters create my-cluster --num-nodes 1 --zone europe-west2
+#      - name: Create Cluster
+#        uses: actions-hub/gcloud@307.0.0
+#        env:
+#          PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
+#          APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
+#        with:
+#          args: container clusters create my-cluster --num-nodes 1 --zone europe-west2
 
       - name: Get Cluster Credentials
         uses: actions-hub/gcloud@307.0.0
