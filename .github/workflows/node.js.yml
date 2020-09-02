@@ -27,7 +27,7 @@ jobs:
     - run: npm test
 
   deployManageStreamer:
-    name: Deploy
+    name: Deploy manage-streamer
     runs-on: ubuntu-latest
     needs: [buildManageStreamer]
     steps:
