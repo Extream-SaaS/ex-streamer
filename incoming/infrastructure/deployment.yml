@@ -15,7 +15,7 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: gke-test
+  name: extreamer-incoming
 spec:
   replicas: 1
   strategy:
@@ -29,7 +29,7 @@ spec:
         app: gke-test
     spec:
       containers:
-        - name: gke-test
+        - name: extreamer-incoming
           image: gcr.io/PROJECT_ID/IMAGE:TAG
           ports:
             - containerPort: 5000

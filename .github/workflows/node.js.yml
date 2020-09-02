@@ -9,14 +9,14 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCLOUD_PROJECT_ID }}
-  GKE_CLUSTER: my-cluster    # TODO: update to cluster name
-  GKE_ZONE: europe-west2   # TODO: update to cluster zone
-  DEPLOYMENT_NAME: gke-test # TODO: update to deployment name
+  GKE_CLUSTER: my-cluster
+  GKE_ZONE: europe-west2
+  DEPLOYMENT_NAME: gke-test
   IMAGE: extreamer-incoming
 
 jobs:
-  buildExstreamerIncoming:
-    name: Build Exstreamer Incoming
+  buildPushDeployExstreamerIncoming:
+    name: Build Push Deploy Exstreamer Incoming - Kubernetes
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -68,6 +68,7 @@ jobs:
       # Deploy the Docker image to the GKE cluster
       - name: Deploy
         run: |-
+          cd infrastructure
           ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE:TAG=gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
           ./kustomize build . | kubectl apply -f -
           kubectl rollout status deployment/$DEPLOYMENT_NAME
@@ -115,47 +116,47 @@ jobs:
 #      - run: kubectl expose deployment hello-server --type LoadBalancer \
 #          --port 80 --target-port 8080
 
-#  buildManageStreamer:
-#    name: Build manage-streamer
-#    runs-on: ubuntu-latest
-#
-#    defaults:
-#      run:
-#        working-directory: manager
-#
-#    strategy:
-#      matrix:
-#        node-version: [12.x]
-#
-#    steps:
-#    - uses: actions/checkout@v2
-#    - name: Use Node.js ${{ matrix.node-version }}
-#      uses: actions/setup-node@v1.4.3
-#      with:
-#        node-version: ${{ matrix.node-version }}
-#    - run: npm ci
-#    - run: npm run build --if-present
-#    - run: npm test
-#
-#  deployManageStreamer:
-#    name: Deploy manage-streamer
-#    runs-on: ubuntu-latest
-#    needs: [buildManageStreamer]
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Create variables.yaml
-#        uses: microsoft/variable-substitution@v1
-#        with:
-#          files: 'manager/variables.yaml'
-#        env:
-#          EXAUTH: ${{ secrets.EXAUTH }}
-#          EXRTMP: ${{ secrets.EXRTMP }}
-#          EXSTREAMER: ${{ secrets.EXSTREAMER }}
-#
-#      - name: Deploy to GCP
-#        uses: actions-hub/gcloud@307.0.0
-#        env:
-#         PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
-#         APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
-#        with:
-#         args: functions deploy manage-streamer --region europe-west2  --runtime nodejs12 --source manager --entry-point manage --env-vars-file manager/variables.yaml --trigger-topic ex-streamer --retry
+  buildManageStreamer:
+    name: Build manage-streamer
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: manager
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1.4.3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test
+
+  deployManageStreamer:
+    name: Deploy manage-streamer - Cloud Function
+    runs-on: ubuntu-latest
+    needs: [buildManageStreamer]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create variables.yaml
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: 'manager/variables.yaml'
+        env:
+          EXAUTH: ${{ secrets.EXAUTH }}
+          EXRTMP: ${{ secrets.EXRTMP }}
+          EXSTREAMER: ${{ secrets.EXSTREAMER }}
+
+      - name: Deploy to GCP
+        uses: actions-hub/gcloud@307.0.0
+        env:
+         PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
+         APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
+        with:
+         args: functions deploy manage-streamer --region europe-west2  --runtime nodejs12 --source manager --entry-point manage --env-vars-file manager/variables.yaml --trigger-topic ex-streamer --retry
