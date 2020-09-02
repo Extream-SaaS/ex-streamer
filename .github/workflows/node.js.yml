@@ -41,34 +41,34 @@ jobs:
 
       - run: docker images
 
-#      - name: Install Kubectl
-#        uses: actions-hub/gcloud@307.0.0
-#        env:
-#         PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
-#         APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
-#        with:
-#         args: components install kubectl
-#
-#      - name: Create Cluster
-#        uses: actions-hub/gcloud@307.0.0
-#        env:
-#          PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
-#          APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
-#        with:
-#          args: container clusters create my-cluster --num-nodes 1 --zone europe-west2
-#
-#      - name: Get Cluster Credentials
-#        uses: actions-hub/gcloud@307.0.0
-#        env:
-#          PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
-#          APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
-#        with:
-#          args: container clusters get-credentials my-cluster --zone europe-west2
-#
-#      - run: kubectl create deployment hello-server --image=gcr.io/stoked-reality-284921/extreamer-encoder:sha-e475206
-#
-#      - run: kubectl expose deployment hello-server --type LoadBalancer \
-#          --port 80 --target-port 8080
+      - name: Install Kubectl
+        uses: actions-hub/gcloud@307.0.0
+        env:
+         PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
+         APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
+        with:
+         args: components install kubectl
+
+      - name: Create Cluster
+        uses: actions-hub/gcloud@307.0.0
+        env:
+          PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
+          APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
+        with:
+          args: container clusters create my-cluster --num-nodes 1 --zone europe-west2
+
+      - name: Get Cluster Credentials
+        uses: actions-hub/gcloud@307.0.0
+        env:
+          PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
+          APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
+        with:
+          args: container clusters get-credentials my-cluster --zone europe-west2 --project stoked-reality-284921
+
+      - run: kubectl create deployment hello-server --image=gcr.io/stoked-reality-284921/extreamer-encoder:sha-e475206
+
+      - run: kubectl expose deployment hello-server --type LoadBalancer \
+          --port 80 --target-port 8080
 
 #  buildManageStreamer:
 #    name: Build manage-streamer
