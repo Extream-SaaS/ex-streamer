@@ -3,6 +3,7 @@ const projectId = 'stoked-reality-284921';
 
 const publish = (
   topicName = 'ex-gateway',
+  source = 'app-engine',
   data = {}
 ) => {
   const {PubSub} = require('@google-cloud/pubsub');
@@ -12,7 +13,7 @@ const publish = (
   async function publishMessage() {
     const dataBuffer = Buffer.from(JSON.stringify(data));
 
-    const messageId = await pubsub.topic(topicName).publish(dataBuffer);
+    const messageId = await pubsub.topic(`${topicName}-${source}`).publish(dataBuffer);
     return messageId;
   }
 
@@ -30,7 +31,7 @@ exports.manage = async (event, context, callback) => {
   if (message === null) {
     callback();
   }
-  const {domain, action, command, socketId, payload, user} = message;
+  const {source, domain, action, command, socketId, payload, user} = message;
   const db = new Firestore({
     projectId,
   });
@@ -54,11 +55,11 @@ exports.manage = async (event, context, callback) => {
         // send a message to the manager to add this itinerary item to the itinerary
         await Promise.all([
           publish('ex-manage', { domain, action, command, payload: { ...payload, id: docRef.id }, user, socketId }),
-          publish('ex-gateway', { domain, action, command, payload: { ...payload, id: docRef.id }, user, socketId })
+          publish('ex-gateway', source, { domain, action, command, payload: { ...payload, id: docRef.id }, user, socketId })
         ]);
         callback();
       } catch (error) {
-        await publish('ex-gateway', { error: error.message, domain, action, command, payload, user, socketId });
+        await publish('ex-gateway', source, { error: error.message, domain, action, command, payload, user, socketId });
         callback(0);
       }
       break;
@@ -74,11 +75,11 @@ exports.manage = async (event, context, callback) => {
           merge: true
         });
     
-        const messageId = await publish('ex-gateway', { domain, action, command, payload, user, socketId });
-        console.log(messageId, 'ex-gateway', { domain, action, command, payload, user, socketId });
+        const messageId = await publish('ex-gateway', source, { domain, action, command, payload, user, socketId });
+        console.log(messageId, 'ex-gateway', source, { domain, action, command, payload, user, socketId });
         callback();
       } catch (error) {
-        await publish('ex-gateway', { error: error.message, domain, action, command, payload, user, socketId });
+        await publish('ex-gateway', source, { error: error.message, domain, action, command, payload, user, socketId });
         callback(0);
       }
       break;
@@ -92,10 +93,10 @@ exports.manage = async (event, context, callback) => {
           throw new Error('item not found');
         }
     
-        await publish('ex-gateway', { domain, action, command, payload: stream.data(), user, socketId });
+        await publish('ex-gateway', source, { domain, action, command, payload: stream.data(), user, socketId });
         callback();
       } catch (error) {
-        await publish('ex-gateway', { error: error.message, domain, action, command, payload, user, socketId });
+        await publish('ex-gateway', source, { error: error.message, domain, action, command, payload, user, socketId });
         callback(0);
       }
       break;
@@ -151,10 +152,10 @@ exports.manage = async (event, context, callback) => {
             merge: true
           });
         }
-        await publish('ex-gateway', { domain, action, command, payload: data, user, socketId });
+        await publish('ex-gateway', source, { domain, action, command, payload: data, user, socketId });
         callback();
       } catch (error) {
-        await publish('ex-gateway', { error: error.message, domain, action, command, payload, user, socketId });
+        await publish('ex-gateway', source, { error: error.message, domain, action, command, payload, user, socketId });
         callback(0);
       }
       break;
@@ -208,7 +209,7 @@ exports.manage = async (event, context, callback) => {
         });
 
         const published = [];
-        published.push(publish('ex-gateway', { domain, action, command, payload: { ...payload, ...data }, user }));
+        published.push(publish('ex-gateway', source, { domain, action, command, payload: { ...payload, ...data }, user }));
         published.push(publish('ex-streamer-incoming', { domain, action, command, payload: { ...payload, ...data, broadcast, status }, user }));
         if (broadcast) {
           // fire up the listener to encode to the bucket
@@ -252,7 +253,7 @@ exports.manage = async (event, context, callback) => {
         });
 
         const published = [];
-        published.push(publish('ex-gateway', { domain, action, command, payload: { ...data, ...updated }, user }));
+        published.push(publish('ex-gateway', source, { domain, action, command, payload: { ...data, ...updated }, user }));
         published.push(publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, ...updated }, user }));
         if (broadcast) {
           // mark this as complete and end the encoding listener
