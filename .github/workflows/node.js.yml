@@ -1,0 +1,121 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+
+env:
+  PROJECT_ID: ${{ secrets.GCLOUD_PROJECT_ID }}
+  GKE_CLUSTER: my-cluster
+  GKE_ZONE: europe-west2
+  DEPLOYMENT_NAME: gke-test
+  IMAGE: extreamer-incoming
+
+jobs:
+  buildPushDeployExstreamerIncoming:
+    name: Build Push Deploy Exstreamer Incoming - Kubernetes
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: incoming
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1.4.3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test
+
+      # Setup gcloud CLI
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          version: '290.0.1'
+          service_account_key: ${{ secrets.GCLOUD_CREDENTIALS }}
+          project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
+
+      # Configure Docker to use the gcloud command-line tool as a credential
+      # helper for authentication
+      - run: |-
+          gcloud --quiet auth configure-docker
+      # Get the GKE credentials so we can deploy to the cluster
+      - run: |-
+          gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+      # Build the Docker image
+      - name: Build
+        run: |-
+          docker build \
+            --tag "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA" \
+            --build-arg GCLOUD_AUTH=${{ secrets.DEFAULT_SERVICE_ACCOUNT_CREDENTIALS }} \
+            .
+      # Push the Docker image to Google Container Registry
+      - name: Publish
+        run: |-
+          docker push "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
+      # Set up kustomize
+      - name: Set up Kustomize
+        run: |-
+          cd infrastructure
+          curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
+          chmod u+x ./kustomize
+      # Deploy the Docker image to the GKE cluster
+      - name: Deploy
+        run: |-
+          cd infrastructure
+          ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE:TAG=gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
+          ./kustomize build . | kubectl apply -f -
+          kubectl rollout status deployment/$DEPLOYMENT_NAME
+          kubectl get services -o wide
+
+  buildManageStreamer:
+    name: Build manage-streamer
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: manager
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1.4.3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test
+
+  deployManageStreamer:
+    name: Deploy manage-streamer - Cloud Function
+    runs-on: ubuntu-latest
+    needs: [buildManageStreamer]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create variables.yaml
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: 'manager/variables.yaml'
+        env:
+          EXAUTH: ${{ secrets.EXAUTH }}
+          EXRTMP: ${{ secrets.EXRTMP }}
+          EXSTREAMER: ${{ secrets.EXSTREAMER }}
+
+      - name: Deploy to GCP
+        uses: actions-hub/gcloud@307.0.0
+        env:
+         PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
+         APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
+        with:
+         args: functions deploy manage-streamer --region europe-west2  --runtime nodejs12 --source manager --entry-point manage --env-vars-file manager/variables.yaml --trigger-topic ex-streamer --retry
