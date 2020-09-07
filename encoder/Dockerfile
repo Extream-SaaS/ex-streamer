@@ -13,7 +13,6 @@ RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 
 RUN apt-get update -qq && apt-get -y install python3-yaml nodejs expat libgomp1 google-cloud-sdk && apt-get autoremove -y && apt-get clean -y
 
-
 RUN wget https://github.com/google/shaka-packager/releases/download/${packager_version}/packager-linux
 RUN install -m 755 packager-linux /usr/bin/packager
 RUN mkdir /opt/encoder

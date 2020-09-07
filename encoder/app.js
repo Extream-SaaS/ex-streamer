@@ -15,38 +15,6 @@ const pubsub = new PubSub({grpc, projectId});
 
 const processes = {};
 
-const activateObj = {
-    domain: 'client',
-    action: 'rtmp',
-    command: 'activate',
-    payload: {
-        itinerary: '90fea305-ecf2-420b-b143-b8496180a963',
-        configuration: {
-            actor: '091e8b52-8506-4512-b75e-149ee51c4f04',
-            mode: 'record',
-            broadcast: true
-        },
-        updatedBy: '091e8b52-8506-4512-b75e-149ee51c4f04',
-        id: 'cREtpfUXYiS8wdSSDELV',
-        addedBy: '091e8b52-8506-4512-b75e-149ee51c4f04',
-        end_date: { _seconds: 1598342400, _nanoseconds: 0 },
-        title: 'Itinerary live stream 1',
-        start_date: { _seconds: 1598256000, _nanoseconds: 0 },
-        type: 'rtmp',
-        updatedAt: { _seconds: 1598256006, _nanoseconds: 384000000 },
-        addedAt: { _seconds: 1598141520, _nanoseconds: 469000000 },
-        streamUrl: "rtmp://incoming.stream.extream.app/recorder/cREtpfUXYiS8wdSSDELV-3af435e5d505c4d349ae07161408375b43fb7c9e"
-    },
-    user: {
-        id: "091e8b52-8506-4512-b75e-149ee51c4f04",
-        username: "tester",
-        fields: {
-            custom: "fields"
-        },
-        token: "3af435e5d505c4d349ae07161408375b43fb7c9e"
-    }
-};
-
 function pull(
     subscriptionName = 'ex-streamer-encoder',
     timeout = 60
@@ -105,14 +73,14 @@ function pull(
                         message.ack();
                     }
                 } else if (!internal) {
-                    message.nack();
+                    message.ack();
                 }
             });
         } else if (body.command === 'complete') {
             // kill the process
             if (!processes[body.payload.id]) {
                 // not found in this instance, move to the next
-                message.nack();
+                message.ack();
             } else {
                 processes[body.payload.id].stdin.pause();
                 processes[body.payload.id].kill();
@@ -121,17 +89,13 @@ function pull(
             }
         }
     };
-    if (process.env.NODE_ENV !== 'production') {
-        messageHandler(activateObj, true);
-    } else {
-        subscription.on('message', messageHandler);
-        // regurgitate the handler occasionally \\
-        setTimeout(() => {
-            subscription.removeListener('message', messageHandler);
-            console.log(`${messageCount} message(s) received. Refreshing.`);
-            pull(subscriptionName, timeout);
-        }, timeout * 1000);
-    }
+    subscription.on('message', messageHandler);
+    // regurgitate the handler occasionally \\
+    setTimeout(() => {
+        subscription.removeListener('message', messageHandler);
+        console.log(`${messageCount} message(s) received. Refreshing.`);
+        pull(subscriptionName, timeout);
+    }, timeout * 1000);
 }
 
 pull();
