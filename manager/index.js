@@ -203,6 +203,7 @@ exports.manage = async (event, context, callback) => {
         await docRef.set({
           status,
           streamUrl: payload.streamUrl,
+          broadcast,
           updatedBy: user.id,
           updatedAt: Firestore.FieldValue.serverTimestamp()
         }, {
@@ -256,7 +257,7 @@ exports.manage = async (event, context, callback) => {
         const published = [];
         published.push(publish('ex-gateway', source, { domain, action, command, payload: { ...data, ...updated }, user }));
         published.push(publish('ex-streamer-incoming', { domain, action, command, payload: { ...data, ...updated }, user }));
-        if (broadcast) {
+        if (data.broadcast) {
           // mark this as complete and end the encoding listener
           published.push(publish('ex-streamer-encoder', { domain, action, command, payload: { ...data, ...updated }, user }));
         }
