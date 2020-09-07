@@ -11,7 +11,7 @@ env:
   PROJECT_ID: ${{ secrets.GCLOUD_PROJECT_ID }}
   GKE_CLUSTER: my-cluster
   GKE_ZONE: europe-west2-b
-  DEPLOYMENT_NAME: gke-test
+  DEPLOYMENT_NAME: extreamer-incoming
   IMAGE: extreamer-incoming
 
 jobs:
