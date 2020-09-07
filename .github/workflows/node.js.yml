@@ -59,8 +59,8 @@ jobs:
             --build-arg GCLOUD_AUTH=${{ secrets.DEFAULT_SERVICE_ACCOUNT_CREDENTIALS }} \
             .
       # Push the Docker image to Google Container Registry
-      - name: Docker-Push
-        id: Docker Push
+      - name: Docker Push
+        id: Docker-Push
         run: |-
           docker push "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
       # Set up kustomize
