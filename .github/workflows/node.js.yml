@@ -75,15 +75,11 @@ jobs:
           kubectl rollout status deployment/$DEPLOYMENT_NAME
           kubectl get services -o wide
           
-      - uses: 8398a7/action-slack@v3
+      - uses: act10ns/slack@v1
         with:
           status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow,took
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          MATRIX_CONTEXT: ${{ toJson(matrix) }}
-        if: always()   
+          steps: ${{ toJson(steps) }}
+        if: always()
 
   buildManageStreamer:
     name: Build manage-streamer
