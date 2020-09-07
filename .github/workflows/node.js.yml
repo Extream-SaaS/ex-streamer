@@ -28,6 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
+        id: Build
         uses: actions/setup-node@v1.4.3
         with:
           node-version: ${{ matrix.node-version }}
@@ -51,23 +52,27 @@ jobs:
           gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
       # Build the Docker image
       - name: Build
+        id: Docker Build
         run: |-
           docker build \
             --tag "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA" \
             --build-arg GCLOUD_AUTH=${{ secrets.DEFAULT_SERVICE_ACCOUNT_CREDENTIALS }} \
             .
       # Push the Docker image to Google Container Registry
-      - name: Publish
+      - name: Docker Push
+        id: Docker Push
         run: |-
           docker push "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
       # Set up kustomize
-      - name: Set up Kustomize
+      - name: Configure Kustomize
+        id: Configure Kustomize
         run: |-
           cd infrastructure
           curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
           chmod u+x ./kustomize
       # Deploy the Docker image to the GKE cluster
       - name: Deploy
+        id: Deploy
         run: |-
           cd infrastructure
           ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE:TAG=gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
