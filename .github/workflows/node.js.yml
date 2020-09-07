@@ -76,6 +76,8 @@ jobs:
           kubectl get services -o wide
           
       - uses: act10ns/slack@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
           status: ${{ job.status }}
           steps: ${{ toJson(steps) }}
