@@ -82,6 +82,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          MATRIX_CONTEXT: ${{ toJson(matrix) }}
         if: always()   
 
   buildManageStreamer:
@@ -127,4 +128,4 @@ jobs:
          PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
          APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
         with:
-         args: functions deploy manage-streamer --region europe-west2  --runtime nodejs12 --source manager --entry-point manage --env-vars-file manager/variables.yaml --trigger-topic ex-streamer --retry
+         args: functions deploy manage-streamer --region europe-west2-b  --runtime nodejs12 --source manager --entry-point manage --env-vars-file manager/variables.yaml --trigger-topic ex-streamer --retry
