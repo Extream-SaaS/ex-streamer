@@ -8,3 +8,6 @@ resources:
   cpu: 1
   memory_gb: 6
 env: flex
+
+env_variables:
+  GOOGLE_APPLICATION_CREDENTIALS: /opt/encoder/service-accounts/stoked-reality.json
