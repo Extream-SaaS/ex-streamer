@@ -10,6 +10,7 @@ on:
     - 'manager/*'
     branches: [ master ]
 
+jobs:
   buildManageStreamer:
     name: Build manage-streamer
     runs-on: ubuntu-latest
