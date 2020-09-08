@@ -13,8 +13,8 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCLOUD_PROJECT_ID }}
-  GKE_CLUSTER: my-cluster
-  GKE_ZONE: europe-west2-b
+  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
+  GKE_ZONE: ${{ secrets.GKE_ZONE }}
   DEPLOYMENT_NAME: extreamer-incoming
   IMAGE: extreamer-incoming
 
