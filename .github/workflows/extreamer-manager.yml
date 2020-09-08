@@ -3,11 +3,11 @@ name: Extreamer-Manager
 on:
   push:
     paths:
-    - 'manager/*'
+      - 'manager/*'
     branches: [ master ]
   pull_request:
     paths:
-    - 'manager/*'
+      - 'manager/*'
     branches: [ master ]
 
 jobs:
@@ -24,23 +24,23 @@ jobs:
         node-version: [12.x]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      id: Build
-      uses: actions/setup-node@v1.4.3
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        id: Build
+        uses: actions/setup-node@v1.4.3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test
 
-    - uses: act10ns/slack@v1
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      with:
-        status: ${{ job.status }}
-        steps: ${{ toJson(steps) }}
-      if: always()
+      - uses: act10ns/slack@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+        if: always()
 
 
   deployManageStreamer:
@@ -63,10 +63,10 @@ jobs:
         id: Deploy
         uses: actions-hub/gcloud@307.0.0
         env:
-         PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
-         APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
+          PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
+          APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
         with:
-         args: functions deploy manage-streamer --region europe-west2  --runtime nodejs12 --source manager --entry-point manage --env-vars-file manager/variables.yaml --trigger-topic ex-streamer --retry
+          args: functions deploy manage-streamer --region europe-west2  --runtime nodejs12 --source manager --entry-point manage --env-vars-file manager/variables.yaml --trigger-topic ex-streamer --retry
 
       - uses: act10ns/slack@v1
         env:
