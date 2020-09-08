@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: tests not configured\""
+    "test": "echo \"Error: tests notconfigured\""
   },
   "keywords": [],
   "author": "",
