@@ -1,0 +1,73 @@
+name: Node.js CI
+
+on:
+  push:
+    paths:
+    - 'manager/*'
+    branches: [ master ]
+  pull_request:
+    paths:
+    - 'manager/*'
+    branches: [ master ]
+
+  buildManageStreamer:
+    name: Build manage-streamer
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: manager
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1.4.3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test
+
+    - uses: act10ns/slack@v1
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      with:
+        status: ${{ job.status }}
+        steps: ${{ toJson(steps) }}
+      if: always()
+
+
+  deployManageStreamer:
+    name: Deploy manage-streamer - Cloud Function
+    runs-on: ubuntu-latest
+    needs: [buildManageStreamer]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create variables.yaml
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: 'manager/variables.yaml'
+        env:
+          EXAUTH: ${{ secrets.EXAUTH }}
+          EXRTMP: ${{ secrets.EXRTMP }}
+          EXSTREAMER: ${{ secrets.EXSTREAMER }}
+
+      - name: Deploy to GCP
+        uses: actions-hub/gcloud@307.0.0
+        env:
+         PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
+         APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
+        with:
+         args: functions deploy manage-streamer --region europe-west2  --runtime nodejs12 --source manager --entry-point manage --env-vars-file manager/variables.yaml --trigger-topic ex-streamer --retry
+
+      - uses: act10ns/slack@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+        if: always()
