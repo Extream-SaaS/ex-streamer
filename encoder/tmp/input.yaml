@@ -1,5 +1,9 @@
 inputs:
-  - name: rtmp://incoming.stream.extream.app/live/stream01
+  - name: rtmp://incoming.stream.extream.app/live/RUSPiCAV49gxEmHQITHu-f3b0d720c003b19a239caca7ab02339d92ea6567
     media_type: video
-  - name: rtmp://incoming.stream.extream.app/live/stream01
+    frame_rate: 25
+    extra_input_args: '-re'
+  - name: rtmp://incoming.stream.extream.app/live/RUSPiCAV49gxEmHQITHu-f3b0d720c003b19a239caca7ab02339d92ea6567
+    extra_input_args: '-re'
     media_type: audio
+    frame_rate: 25
