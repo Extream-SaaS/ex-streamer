@@ -175,7 +175,7 @@ exports.manage = async (event, context, callback) => {
 
           let data = stream.data();
 
-          if (!data.streamUrl || data.status !== 'live') {
+          if (!data.streamUrl || data.status !== 'live' || (!data.otf || data.otf !== true)) {
             throw new Error('item not ready');
           }
 
@@ -251,7 +251,10 @@ exports.manage = async (event, context, callback) => {
         await Promise.all(published);
         callback();
       } catch (error) {
-        await publish('ex-streamer-incoming', { error: error.message, domain, action, command, payload, user });
+        const published = [];
+        published.push(publish('ex-gateway', source, { error: error.message, domain, action, command, payload: { ...payload, ...data }, user }));
+        published.push(publish('ex-streamer-incoming', { error: error.message, domain, action, command, payload, user }));
+        await Promise.all(published);
         callback(0);
       }
       break;
