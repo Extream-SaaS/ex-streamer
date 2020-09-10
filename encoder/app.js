@@ -8,6 +8,7 @@ const dir = './tmp';
 // listens to ex-encoder queue for creating streams
 // Imports the Google Cloud client library
 const {PubSub} = require('@google-cloud/pubsub');
+const {Storage} = require('@google-cloud/storage');
 const grpc = require('grpc');
 const projectId = 'stoked-reality-284921';
 
@@ -87,6 +88,68 @@ function pull(
                 delete processes[body.payload.id];
                 message.ack();
             }
+        } else if (body.command === 'encode') {
+            if (!body.user) {
+                // its a message that doesn't contain everything
+                console.log(body);
+                message.ack();
+                return true;
+            }
+            // create folder and download source
+            if (!fs.existsSync(`${dir}/${body.payload.id}-${body.user.token}`)){
+                fs.mkdirSync(`${dir}/${body.payload.id}-${body.user.token}`);
+            }
+
+            // download file from cloud storage
+            const storage = new Storage();
+            const bucket = storage.bucket('ex-streamer');
+
+            const fileRef = bucket.file(`playback/tmp/${body.payload.input_file}`);
+
+            await fileRef.download({
+                destination: `${dir}/${body.payload.id}-${body.user.token}/${payload.input_file}`
+            });
+
+
+            // generate the yaml files
+            fs.writeFile(`${dir}/${body.payload.id}-${body.user.token}/input.yaml`, `inputs:
+  - name: ${dir}/${body.payload.id}-${body.user.token}/${payload.input_file}
+    media_type: video
+    - name: ${dir}/${body.payload.id}-${body.user.token}/${payload.input_file}
+    media_type: audio`, (err) => {
+                if (!err) {
+                    if (processes[body.payload.id]) {
+                        // kill the first instance and reinitiate
+                        processes[body.payload.id].stdin.pause();
+                        processes[body.payload.id].kill();
+                    }
+                    processes[body.payload.id] = spawn('shaka-streamer', [
+                        `-i${dir}/${body.payload.id}-${body.user.token}/input.yaml`,
+                        '-ptmp/output_vod.yaml',
+                        `-cgs://ex-streamer/playback/${body.payload.id}`
+                    ]);
+                    processes[body.payload.id].stdout.on("data", data => {
+                        console.log(`stdout: ${data}`);
+                    });
+                    
+                    processes[body.payload.id].stderr.on("data", data => {
+                        console.error(`stderr: ${data}`);
+                    });
+                    
+                    processes[body.payload.id].on('error', (error) => {
+                        console.log(`error: ${error.message}`);
+                    });
+                    
+                    processes[body.payload.id].on("close", code => {
+                        console.log(`child process exited with code ${code}`);
+                    });
+                    if (!internal) {
+                        message.ack();
+                    }
+                } else if (!internal) {
+                    message.ack();
+                }
+            });
         }
     };
     subscription.on('message', messageHandler);

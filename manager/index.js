@@ -224,6 +224,41 @@ exports.manage = async (event, context, callback) => {
         callback(0);
       }
       break;
+    case 'encode':
+      try {
+        // this is only available for client domain \\
+        if (domain !== 'client') {
+          throw new Error('only clients encode');
+        }
+        const docRef = db.collection('streams').doc(payload.id);
+        const stream = await docRef.get();
+        
+        if (!stream.exists) {
+          throw new Error('item not found');
+        }
+
+        let data = stream.data();
+
+        await docRef.set({
+          status,
+          inputFile: payload.input_file,
+          updatedBy: user.id,
+          updatedAt: Firestore.FieldValue.serverTimestamp()
+        }, {
+          merge: true
+        });
+
+        const published = [];
+        published.push(publish('ex-gateway', source, { domain, action, command, payload: { ...payload, ...data }, user }));
+        // fire up the listener to encode to the bucket
+        published.push(publish('ex-streamer-encoder', { domain, action, command, payload: { ...payload, ...data }, user }));
+        await Promise.all(published);
+        callback();
+      } catch (error) {
+        await publish('ex-streamer-incoming', { error: error.message, domain, action, command, payload, user });
+        callback(0);
+      }
+      break;
     case 'complete':
       try {
         // this is only available for client domain \\
