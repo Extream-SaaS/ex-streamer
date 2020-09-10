@@ -179,9 +179,11 @@ exports.manage = async (event, context, callback) => {
             throw new Error('item not ready');
           }
 
-          if (data.otf_users.includes(user.id)) {
+          if (data.otf_users && data.otf_users.includes(user.id)) {
             throw new Error('user already consuming');
           }
+
+          const otf_status = 'consuming';
 
           await docRef.set({
             otf_status,
