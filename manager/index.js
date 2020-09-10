@@ -254,6 +254,7 @@ exports.manage = async (event, context, callback) => {
         const published = [];
         published.push(publish('ex-gateway', source, { error: error.message, domain, action, command, payload: { ...payload, ...data }, user }));
         published.push(publish('ex-streamer-incoming', { error: error.message, domain, action, command, payload, user }));
+        console.error(error);
         await Promise.all(published);
         callback(0);
       }
