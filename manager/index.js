@@ -1,4 +1,5 @@
 const Firestore = require('@google-cloud/firestore');
+const admin = require('firebase-admin');
 const projectId = 'stoked-reality-284921';
 
 const publish = (
@@ -163,7 +164,37 @@ exports.manage = async (event, context, callback) => {
     case 'activate':
       try {
         // this is only available for client domain \\
-        if (domain !== 'client') {
+        if (domain === 'consumer' && action === 'otf') {
+          // check the item has otf enabled \\
+          const docRef = db.collection('streams').doc(payload.id);
+          const stream = await docRef.get();
+          
+          if (!stream.exists) {
+            throw new Error('item not found');
+          }
+
+          let data = stream.data();
+
+          if (!data.streamUrl || status !== 'live') {
+            throw new Error('item not ready');
+          }
+
+          await docRef.set({
+            otf_status,
+            otf_users: admin.firestore.FieldValue.arrayUnion(user.id),
+            updatedBy: user.id,
+            updatedAt: Firestore.FieldValue.serverTimestamp()
+          }, {
+            merge: true
+          });
+
+          const published = [];
+          published.push(publish('ex-gateway', source, { domain, action, command, payload: { ...payload, ...data }, user }));
+          if (status) {
+            // spin up a new render instance
+            published.push(publish('ex-streamer-outgoing', { domain, action, command, payload: { ...payload, ...data, status }, user }));
+          }
+        } else if (domain !== 'client') {
           throw new Error('only clients activate');
         }
         const docRef = db.collection('streams').doc(payload.id);
@@ -240,7 +271,6 @@ exports.manage = async (event, context, callback) => {
         let data = stream.data();
 
         await docRef.set({
-          status,
           inputFile: payload.input_file,
           updatedBy: user.id,
           updatedAt: Firestore.FieldValue.serverTimestamp()
@@ -255,10 +285,41 @@ exports.manage = async (event, context, callback) => {
         await Promise.all(published);
         callback();
       } catch (error) {
-        await publish('ex-streamer-incoming', { error: error.message, domain, action, command, payload, user });
+        await publish('ex-gateway', source, { error: error.message, domain, action, command, payload, user });
         callback(0);
       }
       break;
+    case 'otf':
+      // enables on the fly encoding for the source
+      try {
+        // this is only available for client domain \\
+        if (domain !== 'client') {
+          throw new Error('only clients encode');
+        }
+        const docRef = db.collection('streams').doc(payload.id);
+        const stream = await docRef.get();
+        
+        if (!stream.exists) {
+          throw new Error('item not found');
+        }
+
+        await docRef.set({
+          otf: true,
+          updatedBy: user.id,
+          updatedAt: Firestore.FieldValue.serverTimestamp()
+        }, {
+          merge: true
+        });
+
+        const published = [];
+        published.push(publish('ex-gateway', source, { domain, action, command, payload: { ...payload, ...data }, user }));
+        await Promise.all(published);
+        callback();
+      } catch (error) {
+        await publish('ex-gateway', source, { error: error.message, domain, action, command, payload, user });
+        callback(0);
+      }
+    break;
     case 'complete':
       try {
         // this is only available for client domain \\

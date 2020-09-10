@@ -22,7 +22,7 @@ function pull(
 ) {
     const subscription = pubsub.subscription(subscriptionName);
     let messageCount = 0;
-    const messageHandler = (message, internal=false) => {
+    const messageHandler = async (message, internal=false) => {
         console.log(`Received message ${message.id}:`);
         messageCount += 1;
         const body = message.data ? JSON.parse(Buffer.from(message.data, 'base64').toString()) : message;
