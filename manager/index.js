@@ -200,6 +200,7 @@ exports.manage = async (event, context, callback) => {
           published.push(publish('ex-streamer-outgoing', { domain, action, command, payload: { ...payload, ...data }, user }));
           await Promise.all(published);
           callback();
+          return;
         } else if (domain !== 'client') {
           throw new Error('only clients activate');
         }
