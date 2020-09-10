@@ -175,7 +175,7 @@ exports.manage = async (event, context, callback) => {
 
           let data = stream.data();
 
-          if (!data.streamUrl || status !== 'live') {
+          if (!data.streamUrl || data.status !== 'live') {
             throw new Error('item not ready');
           }
 
@@ -190,10 +190,10 @@ exports.manage = async (event, context, callback) => {
 
           const published = [];
           published.push(publish('ex-gateway', source, { domain, action, command, payload: { ...payload, ...data }, user }));
-          if (status) {
-            // spin up a new render instance
-            published.push(publish('ex-streamer-outgoing', { domain, action, command, payload: { ...payload, ...data, status }, user }));
-          }
+          // spin up a new render instance
+          published.push(publish('ex-streamer-outgoing', { domain, action, command, payload: { ...payload, ...data }, user }));
+          await Promise.all(published);
+          callback();
         } else if (domain !== 'client') {
           throw new Error('only clients activate');
         }
@@ -310,6 +310,8 @@ exports.manage = async (event, context, callback) => {
         }, {
           merge: true
         });
+
+        let data = stream.data();
 
         const published = [];
         published.push(publish('ex-gateway', source, { domain, action, command, payload: { ...payload, ...data }, user }));
