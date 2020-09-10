@@ -179,6 +179,10 @@ exports.manage = async (event, context, callback) => {
             throw new Error('item not ready');
           }
 
+          if (data.otf_users.includes(user.id)) {
+            throw new Error('user already consuming');
+          }
+
           await docRef.set({
             otf_status,
             otf_users: admin.firestore.FieldValue.arrayUnion(user.id),
@@ -252,7 +256,7 @@ exports.manage = async (event, context, callback) => {
         callback();
       } catch (error) {
         const published = [];
-        published.push(publish('ex-gateway', source, { error: error.message, domain, action, command, payload: { ...payload, ...data }, user }));
+        published.push(publish('ex-gateway', source, { error: error.message, domain, action, command, payload: { ...payload }, user }));
         published.push(publish('ex-streamer-incoming', { error: error.message, domain, action, command, payload, user }));
         console.error(error);
         await Promise.all(published);
