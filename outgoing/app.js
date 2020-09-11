@@ -41,26 +41,28 @@ function pull(
           if (!fs.existsSync(`${dir}/${body.payload.id}`)) {
               fs.mkdirSync(`${dir}/${body.payload.id}`);
           }
-          if (!fs.existsSync(`${dir}/${body.payload.id}/${user.id}`)) {
-            fs.mkdirSync(`${dir}/${body.payload.id}/${user.id}`);
+          if (!fs.existsSync(`${dir}/${body.payload.id}/${body.user.id}`)) {
+            fs.mkdirSync(`${dir}/${body.payload.id}/${body.user.id}`);
         }
-          fs.writeFile(`${dir}/${body.payload.id}/${user.id}/index.m3u8`, `#EXTM3U
+          fs.writeFile(`${dir}/${body.payload.id}/${body.user.id}/index.m3u8`, `#EXTM3U
 #EXT-X-VERSION:3
 #EXT-X-STREAM-INF:BANDWIDTH=1400000,RESOLUTION=842x480
 480p.m3u8
 #EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080
 1080p.m3u8`, (err) => {
               if (!err) {
-                  if (processes[body.payload.id+user.id]) {
+                  if (processes[body.payload.id+body.user.id]) {
                       // kill the first instance and reinitiate
-                      processes[body.payload.id+user.id].stdin.pause();
-                      processes[body.payload.id+user.id].kill();
+                      processes[body.payload.id+body.user.id].stdin.pause();
+                      processes[body.payload.id+body.user.id].kill();
                   }
-                  const textConfig = `fontfile=/opt/arial.ttf:text='Transcoded for: ${user.username}':fontcolor=white: fontsize=24: box=1: boxcolor=black@0.2: x=(w-text_w): y=(h-text_h) `;
-                  processes[body.payload.id+user.id] = spawn(`ffmpeg`, [
+                  console.log(body.user.username);
+                  const textConfigSD = `drawtext=fontfile=${dir}/Montserrat-Medium.ttf:text='Transcoded for ${body.user.username}':fontcolor=white: fontsize=12: box=1: boxcolor=black@0.2: x=(w-text_w)/2: y=(h-text_h)/2: fix_bounds=1`;
+                  const textConfig = `drawtext=fontfile=${dir}/Montserrat-Medium.ttf:text='Transcoded for ${body.user.username}':fontcolor=white: fontsize=24: box=1: boxcolor=black@0.2: x=(w-text_w)/2: y=(h-text_h)/2: fix_bounds=1`;
+                  processes[body.payload.id+body.user.id] = spawn(`ffmpeg`, [
                       '-re',
                       '-i', `${body.payload.streamUrl}`,
-                      '-vf', `scale=w=842:h=480:force_original_aspect_ratio=decrease:${textConfig}`,
+                      '-vf', `scale=w=842:h=480:force_original_aspect_ratio=decrease,${textConfigSD}`,
                       '-c:a', 'aac',
                       '-ar', '44100',
                       '-c:v', 'libx264',
@@ -75,8 +77,8 @@ function pull(
                       '-maxrate', '1498k',
                       '-bufsize', '2100k',
                       '-b:a', '128k',
-                      '-hls_segment_filename', `${dir}/${body.payload.id}/${user.id}/480p_%03d.ts`,
-                      `${dir}/${body.payload.id}/${user.id}/480p.m3u8`,
+                      '-hls_segment_filename', `${dir}/${body.payload.id}/${body.user.id}/480p_%03d.ts`,
+                      `${dir}/${body.payload.id}/${body.user.id}/480p.m3u8`,
                       // '-vf', 'scale=w=1280:h=720:force_original_aspect_ratio=decrease',
                       // '-c:a', 'aac',
                       // '-ar', '44100',
@@ -94,7 +96,7 @@ function pull(
                       // '-b:a', '128k',
                       // '-hls_segment_filename', `${dir}/${body.payload.id}/720p_%03d.ts`,
                       // `${dir}/${body.payload.id}/720p.m3u8`,
-                      '-vf', `scale=w=1920:h=1080:force_original_aspect_ratio=decrease:${textConfig}`,
+                      '-vf', `scale=w=1920:h=1080:force_original_aspect_ratio=decrease,${textConfig}`,
                       '-c:a', 'aac',
                       '-ar', '44100',
                       '-c:v', 'libx264',
@@ -109,8 +111,8 @@ function pull(
                       '-maxrate', '5350k',
                       '-bufsize', '7500k',
                       '-b:a', '192k',
-                      '-hls_segment_filename', `${dir}/${body.payload.id}/${user.id}/1080p_%03d.ts`,
-                      `${dir}/${body.payload.id}/${user.id}/1080p.m3u8`
+                      '-hls_segment_filename', `${dir}/${body.payload.id}/${body.user.id}/1080p_%03d.ts`,
+                      `${dir}/${body.payload.id}/${body.user.id}/1080p.m3u8`
                   ]);
                   // processes[body.payload.id] = spawn('ffmpeg', [
                   //     '-re',
@@ -130,19 +132,19 @@ function pull(
                   //     '-b:a 192k',
                   //     `${dir}/${body.payload.id}/index.m3u8`
                   // ]);
-                  processes[body.payload.id+user.id].stdout.on("data", data => {
+                  processes[body.payload.id+body.user.id].stdout.on("data", data => {
                       console.log(`stdout: ${data}`);
                   });
                   
-                  processes[body.payload.id+user.id].stderr.on("data", data => {
+                  processes[body.payload.id+body.user.id].stderr.on("data", data => {
                       console.error(`stderr: ${data}`);
                   });
                   
-                  processes[body.payload.id+user.id].on('error', (error) => {
+                  processes[body.payload.id+body.user.id].on('error', (error) => {
                       console.log(`error: ${error.message}`);
                   });
                   
-                  processes[body.payload.id+user.id].on("close", code => {
+                  processes[body.payload.id+body.user.id].on("close", code => {
                       console.log(`child process exited with code ${code}`);
                   });
                   if (!internal) {
