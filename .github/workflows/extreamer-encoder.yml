@@ -32,7 +32,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: echo "$(pwd)"
-      - run: DECODED=${{ secrets.SLACK_WEBHOOK_URL }} | base64 --decode
+      - run: DECODED=${{ secrets.DEFAULT_SERVICE_ACCOUNT_CREDENTIALS }} | base64 --decode
       - run: echo $DECODED
       - run: npm run build --if-present
       - name: Test
