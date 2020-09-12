@@ -12,7 +12,7 @@ on:
 
 defaults:
   run:
-    working-directory: ./encoder
+    working-directory: encoder
 
 jobs:
   build:
@@ -58,7 +58,7 @@ jobs:
           PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
           APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
         with:
-          args: app deploy app.yaml
+          args: app deploy app.yaml --source encoder
 
       - uses: act10ns/slack@v1
         env:
