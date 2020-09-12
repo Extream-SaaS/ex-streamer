@@ -59,7 +59,7 @@ jobs:
           PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
           APPLICATION_CREDENTIALS: ${{secrets.GCLOUD_CREDENTIALS}}
         with:
-          args: app deploy app.yaml
+          args: app deploy encoder/app.yaml
 
       - uses: act10ns/slack@v1
         env:
