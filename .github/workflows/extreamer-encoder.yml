@@ -51,9 +51,9 @@ jobs:
     needs: [build]
     steps:
       - uses: actions/checkout@v2
+      - run: echo "$(pwd)"
       - name: Deploy to GCP
         id: Deploy
-      - run: echo "$(pwd)"
         uses: actions-hub/gcloud@307.0.0
         env:
           PROJECT_ID: ${{secrets.GCLOUD_PROJECT_ID}}
