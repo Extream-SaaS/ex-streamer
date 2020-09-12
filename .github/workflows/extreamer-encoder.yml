@@ -10,14 +10,14 @@ on:
       - 'encoder/*'
     branches: [ master ]
 
+defaults:
+  run:
+    working-directory: encoder
+
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: encoder
 
     strategy:
       matrix:
