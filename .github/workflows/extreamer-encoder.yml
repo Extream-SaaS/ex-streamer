@@ -36,9 +36,9 @@ jobs:
 #      - run: echo "${DECODED}"
       - run: mkdir service-accounts
       - run: echo ${{ secrets.DEFAULT_SERVICE_ACCOUNT_CREDENTIALS }} | base64 --decode > service-accounts/stoked-reality.json
-      - run: cd service-accounts
+#      - run: cd service-accounts
       #      - run: touch service-accounts/stoked-reality.json
-      - run: ls
+      - run: ls service-accounts
       - run: npm run build --if-present
       - name: Test
         id: Test
