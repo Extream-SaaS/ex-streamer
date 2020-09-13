@@ -39,7 +39,7 @@ jobs:
 #      - run: cd service-accounts
       #      - run: touch service-accounts/stoked-reality.json
       - run: ls service-accounts
-      - run: cat stoked-reality.json
+      - run: cat service-accounts/stoked-reality.json
       - run: npm run build --if-present
       - name: Test
         id: Test
