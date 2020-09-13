@@ -6,7 +6,7 @@
   "scripts": {
     "start": "NODE_ENV=production pm2-runtime app.js",
     "dev": "NODE_ENV=development nodemon app",
-    "test": "echo \"Error: no test configured!   \""
+    "test": "echo \"Error: no test configured!    \""
   },
   "engines" : {
     "node" : "12.x"
