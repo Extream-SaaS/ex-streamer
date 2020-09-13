@@ -50,9 +50,12 @@ jobs:
     needs: [build]
     steps:
       - uses: actions/checkout@v2
-      - name: Deploy to GCP
+      - name: Create Key File
+        id: Create-Key-File
       - run: mkdir service-accounts
       - run: echo ${{ secrets.DEFAULT_SERVICE_ACCOUNT_CREDENTIALS }} | base64 -d > service-accounts/stoked-reality.json
+
+      - name: Deploy to GCP
         id: Deploy
         uses: actions-hub/gcloud@307.0.0
         env:
