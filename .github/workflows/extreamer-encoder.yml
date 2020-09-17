@@ -3,11 +3,11 @@ name: Extreamer-Encoder
 on:
   push:
     paths:
-      - 'encoder/*'
+      - 'encoder/**'
     branches: [ master ]
   pull_request:
     paths:
-      - 'encoder/*'
+      - 'encoder/**'
     branches: [ master ]
 
 defaults:
