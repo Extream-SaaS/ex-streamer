@@ -57,8 +57,45 @@ function pull(
                       processes[body.payload.id+body.user.id].kill();
                   }
                   console.log(body.user.username);
-                  const textConfigSD = `drawtext=fontfile=${dir}/Montserrat-Medium.ttf:text='Transcoded for ${body.user.username}':fontcolor=white: fontsize=12: box=1: boxcolor=black@0.2: x=(w-text_w)/2: y=(h-text_h)/2: fix_bounds=1`;
-                  const textConfig = `drawtext=fontfile=${dir}/Montserrat-Medium.ttf:text='Transcoded for ${body.user.username}':fontcolor=white: fontsize=24: box=1: boxcolor=black@0.2: x=(w-text_w)/2: y=(h-text_h)/2: fix_bounds=1`;
+                  const textConfigSD = `drawtext=fontfile=./fonts/Montserrat-Medium.ttf:text='Transcoded for ${body.user.username}':fontcolor=white: fontsize=12: box=1: boxcolor=black@0.2: x=(w-text_w)/2: y=(h-text_h)/2: fix_bounds=1`;
+                  const textConfig = `drawtext=fontfile=./fonts/Montserrat-Medium.ttf:text='Transcoded for ${body.user.username}':fontcolor=white: fontsize=24: box=1: boxcolor=black@0.2: x=(w-text_w)/2: y=(h-text_h)/2: fix_bounds=1`;
+                  console.log([`ffmpeg`, [
+                    '-re',
+                    '-i', `${body.payload.streamUrl}`,
+                    '-vf', `scale=w=842:h=480:force_original_aspect_ratio=decrease,${textConfigSD}`,
+                    '-c:a', 'aac',
+                    '-ar', '44100',
+                    '-c:v', 'libx264',
+                    '-profile:v', 'main',
+                    '-crf', '20',
+                    '-sc_threshold', '0',
+                    '-g', '48',
+                    '-keyint_min', '48',
+                    '-hls_time', '4',
+                    '-hls_playlist_type', 'event',
+                    '-b:v', '1400k',
+                    '-maxrate', '1498k',
+                    '-bufsize', '2100k',
+                    '-b:a', '128k',
+                    '-hls_segment_filename', `${dir}/${body.payload.id}/${body.user.id}/480p_%03d.ts`,
+                    `${dir}/${body.payload.id}/${body.user.id}/480p.m3u8`,
+                    '-vf', `scale=w=1280:h=720:force_original_aspect_ratio=decrease,${textConfig}`,
+                    '-c:a', 'aac',
+                    '-ar', '44100',
+                    '-c:v', 'libx264',
+                    '-profile:v', 'main',
+                    '-crf', '20',
+                    '-sc_threshold', '0',
+                    '-g', '48',
+                    '-keyint_min', '48',
+                    '-hls_time', '4',
+                    '-hls_playlist_type', 'event',
+                    '-b:v', '2800k',
+                    '-maxrate', '2996k',
+                    '-bufsize', '4200k',
+                    '-b:a', '128k',
+                    '-hls_segment_filename', `${dir}/${body.payload.id}/${body.user.id}/720p_%03d.ts`,
+                    `${dir}/${body.payload.id}/720p.m3u8`].join(' ')]);
                   processes[body.payload.id+body.user.id] = spawn(`ffmpeg`, [
                       '-re',
                       '-i', `${body.payload.streamUrl}`,
@@ -79,24 +116,7 @@ function pull(
                       '-b:a', '128k',
                       '-hls_segment_filename', `${dir}/${body.payload.id}/${body.user.id}/480p_%03d.ts`,
                       `${dir}/${body.payload.id}/${body.user.id}/480p.m3u8`,
-                      // '-vf', 'scale=w=1280:h=720:force_original_aspect_ratio=decrease',
-                      // '-c:a', 'aac',
-                      // '-ar', '44100',
-                      // '-c:v', 'libx264',
-                      // '-profile:v', 'main',
-                      // '-crf', '20',
-                      // '-sc_threshold', '0',
-                      // '-g', '48',
-                      // '-keyint_min', '48',
-                      // '-hls_time', '4',
-                      // '-hls_playlist_type', 'event',
-                      // '-b:v', '2800k',
-                      // '-maxrate', '2996k',
-                      // '-bufsize', '4200k',
-                      // '-b:a', '128k',
-                      // '-hls_segment_filename', `${dir}/${body.payload.id}/720p_%03d.ts`,
-                      // `${dir}/${body.payload.id}/720p.m3u8`,
-                      '-vf', `scale=w=1920:h=1080:force_original_aspect_ratio=decrease,${textConfig}`,
+                      '-vf', `scale=w=1280:h=720:force_original_aspect_ratio=decrease,${textConfig}`,
                       '-c:a', 'aac',
                       '-ar', '44100',
                       '-c:v', 'libx264',
@@ -107,12 +127,29 @@ function pull(
                       '-keyint_min', '48',
                       '-hls_time', '4',
                       '-hls_playlist_type', 'event',
-                      '-b:v', '5000k',
-                      '-maxrate', '5350k',
-                      '-bufsize', '7500k',
-                      '-b:a', '192k',
-                      '-hls_segment_filename', `${dir}/${body.payload.id}/${body.user.id}/1080p_%03d.ts`,
-                      `${dir}/${body.payload.id}/${body.user.id}/1080p.m3u8`
+                      '-b:v', '2800k',
+                      '-maxrate', '2996k',
+                      '-bufsize', '4200k',
+                      '-b:a', '128k',
+                      '-hls_segment_filename', `${dir}/${body.payload.id}/${body.user.id}/720p_%03d.ts`,
+                      `${dir}/${body.payload.id}/720p.m3u8`,
+                    //   '-vf', `scale=w=1920:h=1080:force_original_aspect_ratio=decrease,${textConfig}`,
+                    //   '-c:a', 'aac',
+                    //   '-ar', '44100',
+                    //   '-c:v', 'libx264',
+                    //   '-profile:v', 'main',
+                    //   '-crf', '20',
+                    //   '-sc_threshold', '0',
+                    //   '-g', '48',
+                    //   '-keyint_min', '48',
+                    //   '-hls_time', '4',
+                    //   '-hls_playlist_type', 'event',
+                    //   '-b:v', '5000k',
+                    //   '-maxrate', '5350k',
+                    //   '-bufsize', '7500k',
+                    //   '-b:a', '192k',
+                    //   '-hls_segment_filename', `${dir}/${body.payload.id}/${body.user.id}/1080p_%03d.ts`,
+                    //   `${dir}/${body.payload.id}/${body.user.id}/1080p.m3u8`
                   ]);
                   // processes[body.payload.id] = spawn('ffmpeg', [
                   //     '-re',
@@ -132,6 +169,7 @@ function pull(
                   //     '-b:a 192k',
                   //     `${dir}/${body.payload.id}/index.m3u8`
                   // ]);
+                  console.log(processes[body.payload.id+body.user.id]);
                   processes[body.payload.id+body.user.id].stdout.on("data", data => {
                       console.log(`stdout: ${data}`);
                   });

@@ -1,0 +1,190 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nfs-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      role: nfs-server
+  template:
+    metadata:
+      labels:
+        role: nfs-server
+    spec:
+      containers:
+      - name: nfs-server
+        image: gcr.io/google_containers/volume-nfs:0.8
+        ports:
+          - name: nfs
+            containerPort: 2049
+          - name: mountd
+            containerPort: 20048
+          - name: rpcbind
+            containerPort: 111
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - mountPath: /data
+            name: nfs-pvc
+      volumes:
+        - name: nfs-pvc
+          gcePersistentDisk:
+            pdName: nfs-disk
+            fsType: ext4
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfs-server
+spec:
+  ports:
+    - name: nfs
+      port: 2049
+    - name: mountd
+      port: 20048
+    - name: rpcbind
+      port: 111
+  selector:
+    role: nfs-server
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: nfs-server.default.svc.cluster.local
+    path: "/"
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nfs-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 10Gi
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: default
+  name: exstreamer-outgoing
+  labels:
+    app: exstreamer-outgoing
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: exstreamer-outgoing
+  template:
+    metadata:
+      labels:
+        app: exstreamer-outgoing
+    spec:
+      containers:
+      - env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /opt/outgoing/service-accounts/stoked-reality.json
+        volumeMounts:
+        - name: media
+          mountPath: /usr/src/media
+        name: exstreamer-outgoing
+        image: extreamio/extreamer-outgoing:v0.1.1
+        resources:
+          limits:
+            cpu: "5"
+          requests:
+            cpu: "2"
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: nfs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: exstreamer-outgoing
+
+spec:
+  ports:
+    - protocol: TCP
+      name: web
+      port: 80
+  selector:
+    app: exstreamer-outgoing
+    
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: default
+  name: exstreamer-webserver
+  labels:
+    app: exstreamer-webserver
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: exstreamer-webserver
+  template:
+    metadata:
+      labels:
+        app: exstreamer-webserver
+    spec:
+      containers:
+      - volumeMounts:
+        - name: media
+          mountPath: /usr/share/caddy
+        name: exstreamer-webserver
+        image: caddy:2.1.1-alpine
+        resources:
+          limits:
+            cpu: "2"
+          requests:
+            cpu: "1"
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: nfs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: exstreamer-webserver
+
+spec:
+  ports:
+    - protocol: TCP
+      name: web
+      port: 80
+  selector:
+    app: exstreamer-webserver
+    
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: app-tls
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`outgoing.stream.extream.app`)
+      services:
+        - name: exstreamer-webserver
+          port: 80
+  tls: # This route uses TLS
+    certResolver: le # Uses our certificate resolver to get a certificate automatically!

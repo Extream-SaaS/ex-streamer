@@ -1,0 +1,7 @@
+additionalArguments:
+  - rich@extream.app
+  - --certificatesresolvers.le.acme.storage=/data/acme.json
+  - --certificatesresolvers.le.acme.tlschallenge=true
+persistence:
+  enabled: true
+  path: /data
