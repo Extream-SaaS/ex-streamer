@@ -3,11 +3,11 @@ name: Extreamer-Manager
 on:
   push:
     paths:
-      - 'manager/*'
+      - 'manager/**'
     branches: [ master ]
   pull_request:
     paths:
-      - 'manager/*'
+      - 'manager/**'
     branches: [ master ]
 
 jobs:
