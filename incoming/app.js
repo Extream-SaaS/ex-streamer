@@ -33,7 +33,7 @@ const config = {
   auth: {
     api: true,
     api_user: 'admin',
-    api_pass: 'admin'
+    api_pass: 'DNdHipVUM4'
   },
   trans: {
     ffmpeg: '/usr/local/bin/ffmpeg',
