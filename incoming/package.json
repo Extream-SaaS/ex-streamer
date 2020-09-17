@@ -5,7 +5,7 @@
   "main": "node_media_server.js",
   "scripts": {
     "start": "node app.js",
-    "test": "echo \"Error: no test configured\""
+    "test": "echo \"Error: no test configured\" "
   },
   "repository": {
     "type": "git",

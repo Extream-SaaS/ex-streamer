@@ -3,11 +3,11 @@ name: Extreamer-Incoming
 on:
   push:
     paths:
-    - 'incoming/*'
+    - 'incoming/**'
     branches: [ master ]
   pull_request:
     paths:
-      - 'incoming/*'
+      - 'incoming/**'
     branches: [ master ]
 
 
