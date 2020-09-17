@@ -19,7 +19,11 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-    - port: 80
-      targetPort: 5000
+    - name: http
+      port: 80
+      targetPort: 8000
+    - name: rtmp
+      port: 1935
+      targetPort: 1935
   selector:
     app: extreamer-incoming

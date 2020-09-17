@@ -35,7 +35,8 @@ spec:
         - name: extreamer-incoming
           image: gcr.io/PROJECT_ID/IMAGE:TAG
           ports:
-            - containerPort: 5000
+            - containerPort: 8000
+            - containerPort: 1935
           resources:
             requests:
               cpu: 100m
