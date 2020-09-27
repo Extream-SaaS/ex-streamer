@@ -38,11 +38,16 @@ exports.manage = async (event, context, callback) => {
     projectId,
   });
   console.log('message', message);
-  if (message.payload.start_date) {
-    message.payload.start_date = Firestore.Timestamp.fromDate(new Date(Date.parse(message.payload.start_date)));
-  }
-  if (message.payload.end_date) {
-    message.payload.end_date = Firestore.Timestamp.fromDate(new Date(Date.parse(message.payload.end_date)));
+  try {
+    if (message.payload.start_date) {
+        message.payload.start_date = Firestore.Timestamp.fromDate(new Date(Date.parse(message.payload.start_date)));
+    }
+    if (message.payload.end_date) {
+        message.payload.end_date = Firestore.Timestamp.fromDate(new Date(Date.parse(message.payload.end_date)));
+    }
+  } catch (error) {
+    await publish('ex-gateway', source, { error: error.message, domain, action, command, payload, user, socketId });
+    callback(0);
   }
   switch (command) {
     case 'create':
