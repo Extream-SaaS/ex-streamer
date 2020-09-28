@@ -100,7 +100,7 @@ exports.manage = async (event, context, callback) => {
           throw new Error('item not found');
         }
     
-        await publish('ex-gateway', source, { domain, action, command, payload: stream.data(), user, socketId });
+        await publish('ex-gateway', source, { domain, action, command, payload: { ...payload, ...stream.data() }, user, socketId });
         callback();
       } catch (error) {
         await publish('ex-gateway', source, { error: error.message, domain, action, command, payload, user, socketId });
@@ -159,7 +159,7 @@ exports.manage = async (event, context, callback) => {
             merge: true
           });
         }
-        await publish('ex-gateway', source, { domain, action, command, payload: data, user, socketId });
+        await publish('ex-gateway', source, { domain, action, command, payload: { ...payload, ...data }, user, socketId });
         callback();
       } catch (error) {
         await publish('ex-gateway', source, { error: error.message, domain, action, command, payload, user, socketId });
