@@ -35,6 +35,8 @@ spec:
         - name: extreamer-incoming
           image: gcr.io/PROJECT_ID/IMAGE:TAG
           env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /usr/src/app/service-accounts/stoked-reality.json
             - name: EXAUTH
               value: 'https://ex-auth-dot-stoked-reality-284921.ew.r.appspot.com'
             - name: EXSTREAMER

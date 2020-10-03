@@ -49,6 +49,13 @@ jobs:
           service_account_key: ${{ secrets.GCLOUD_CREDENTIALS }}
           project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
 
+      # Include credentials
+      - name: Create Key File
+        id: Create-Key-File
+        run: |
+          mkdir service-accounts
+          echo ${{ secrets.DEFAULT_SERVICE_ACCOUNT_CREDENTIALS }} | base64 -d > service-accounts/stoked-reality.json
+
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
       - run: |-
