@@ -23,7 +23,7 @@ const utils = require('./lib/utils');
 
 
 const pubsub = new PubSub({grpc, projectId});
-const LOG_TYPE = 4;
+const LOG_TYPE = 2;
 logger.setLogType(LOG_TYPE);
 
 function push(
