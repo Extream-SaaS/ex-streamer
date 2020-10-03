@@ -18,7 +18,6 @@ const querystring = require('querystring');
 const fs = require('./lib/fs');
 const hls = require('./lib/hls');
 const abr = require('./lib/abr');
-const cache = require('./lib/cache');
 const logger = require('./lib/logger');
 const utils = require('./lib/utils');
 
@@ -429,8 +428,6 @@ const init = async () => {
       logger.log('[NodeEvent on donePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
       if (StreamPath.indexOf('/hls/') != -1) {
         const name = StreamPath.split('/').pop();
-        // Delete the Redis cache key for this stream
-        await cache.del(name);
         // Wait a few minutes before deleting the HLS files on this Server
         // for this session
         const timeoutMs = _.isEqual(process.env.NODE_ENV, 'development') ?
