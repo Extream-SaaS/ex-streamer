@@ -34,6 +34,17 @@ spec:
       containers:
         - name: extreamer-incoming
           image: gcr.io/PROJECT_ID/IMAGE:TAG
+          env:
+            - name: EXAUTH
+              value: 'https://ex-auth-dot-stoked-reality-284921.ew.r.appspot.com'
+            - name: EXSTREAMER
+              value: 'incoming.stream.extream.app'
+            - name: YOUTUBE_URL
+              value: 'a.rtmp.youtube.com/live2'
+            - name: FACEBOOK_URL
+              value: 'live-api-s.facebook.com:443/rtmp'
+            - name: TWITCH_URL
+              value: 'live-jfk.twitch.tv/app'
           ports:
             - containerPort: 8000
             - containerPort: 1935

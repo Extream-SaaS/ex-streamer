@@ -97,7 +97,7 @@ const init = async () => {
         ping_timeout: 60
       },
       http: {
-        port: 8080,
+        port: 8000,
         mediaroot: process.env.MEDIA_ROOT || './media',
         allow_origin: '*',
         api: true
