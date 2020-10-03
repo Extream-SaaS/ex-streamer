@@ -20,16 +20,39 @@ const VOD_APP_NAME = '720p';
 
 // Function to create a unique VOD filename for each stream
 const getVodName = (streams, streamName) => {
+  console.log('get vod target', streamName, streams);
   if (!streams.has(streamName)) return false;
-  return `vod-${streams.get(streamName)}.m3u8`;
+  return `vod-${streams.get(streamName).id}.m3u8`;
 };
 
 // HLS - test4/720p/index.m3u8
-const handlePlaylist = async (path, mediaRoot, streams, streamName, appName) => {
+const handlePlaylist = async (type, path, mediaRoot, streams, streamName, appName) => {
   console.log('handlePlaylist', path);
-  if (await fs.exists(join(mediaRoot, path))) {
-    // Read 720p playlist
-    const liveM3u8 = await fs.readFile(join(mediaRoot, path));
+  const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
+  if (type === 'add' && !streams.get(streamName).abr) {
+    // create the ABR file
+    nodeEvent.emit("newHlsStream", streamName);
+  }
+  try {
+    await uploadBucket.upload(path, {
+      destination: path,
+      contentType: 'application/x-mpegURL',
+      validation: 'crc32c',
+      metadata: {
+        cacheControl: 'public, max-age=10',
+      },
+    });
+  } catch(err) {
+    console.log('======= ERROR UPLOADING FILE ========', err);
+  }
+};
+
+// HLS - test4/720p/index.m3u8
+const handlePlaylistCopy = async (path, mediaRoot, streams, streamName, appName) => {
+  console.log('handlePlaylist copy', path);
+  if (await fs.exists(path)) {
+    console.log('====== path ======', path);
+    const liveM3u8 = await fs.readFile(path);
 
     // Put /vod.m3u8 with all segments and end tag.
     let vodM3u8;
@@ -46,37 +69,49 @@ const handlePlaylist = async (path, mediaRoot, streams, streamName, appName) => 
       }
       vodM3u8 = m3u8.sync_m3u8(liveM3u8, vodM3u8, appName);
       const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
-
-      const file = uploadBucket.file(`${streamName}/${vodFilename}`);
-      await fs.writeFile(vodPath, vodM3u8);
-      fs.createReadStream(vodPath)
-        .pipe(file.createWriteStream({ 
-          gzip: true,
+      try {
+        await fs.writeFile(vodPath, vodM3u8);
+        await uploadBucket.upload(path, {
+          destination: `recording/${streamName}/${appName}/${vodFilename}`,
           contentType: 'application/x-mpegURL',
-        }))
-        .on('error', function(err) {})
-        .on('finish', function() {
-          // The file upload is complete.
-      });
+          validation: 'crc32c',
+        });
+      } catch(err) {
+        console.log('======= ERROR UPLOADING FILE ========', err);
+      }
     }
   }
 };
 
-// TS  - media/test4/720p/20200504-1588591755.ts
-const handleSegment = async (path, mediaRoot) => {
-  const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
+const handleSegmentCopy = async (path) => {
 
-      const file = uploadBucket.file(`${streamName}/${vodFilename}`);
-      await fs.writeFile(vodPath, vodM3u8);
-      fs.createReadStream(join(mediaRoot, path))
-        .pipe(file.createWriteStream({ 
-          gzip: true,
-          contentType: 'application/x-mpegURL',
-        }))
-        .on('error', function(err) {})
-        .on('finish', function() {
-          // The file upload is complete.
-      });
+};
+
+// TS  - media/test4/720p/20200504-1588591755.ts
+const handleSegment = async (path) => {
+  const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
+  try {
+    await uploadBucket.upload(path, {
+      destination: path,
+      validation: 'crc32c',
+    });
+  } catch(err) {
+    console.log('======= ERROR UPLOADING FILE ========', err);
+  }
+};
+
+const handleABR = async (path) => {
+  console.log('====== HANDLE LIVE.m3u8 ======', path);
+  const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
+  try {
+    await uploadBucket.upload(path, {
+      destination: path,
+      contentType: 'application/x-mpegURL',
+      validation: 'crc32c',
+    });
+  } catch(err) {
+    console.log('======= ERROR UPLOADING FILE ========', err);
+  }
 };
 
 // ABR - media/test4/live.m3u8
@@ -87,28 +122,46 @@ const handleSegment = async (path, mediaRoot) => {
 const onFile = async (absolutePath, type, mediaRoot, streams) => {
   try {
     const path = _.trim(_.replace(absolutePath, mediaRoot, ''), '/');
-    if (_.endsWith(path, '.ts')) {
-      const paths = _.split(path, '/');
-      const streamName = _.nth(paths, 0);
-      const appName = _.nth(paths, 1);
-      if (_.isEqual(appName, VOD_APP_NAME)) {
-        console.log(`File ${path} has been ${type}`);
-        // Only upload 720p
-        await handleSegment(path, mediaRoot);
-        await handlePlaylist(
+    const paths = _.split(path, '/');
+    const streamName = _.nth(paths, 1);
+    const appName = _.nth(paths, 2);
+    console.log(type, path);
+    // only send adds for video
+    if (_.endsWith(path, '.ts') && type === 'add') {
+      const stream = streams.get(streamName);
+      const record = stream.record;
+      // TODO: Handle recording on demand
+      await handleSegment(path);
+
+      if (_.isEqual(appName, VOD_APP_NAME) && record) {
+        // TODO: Copy target VOD rate to the new directory on gcloud
+        await handleSegmentCopy(path);
+        await handlePlaylistCopy(
           _.join(_.union(_.initial(_.split(path, '/')), ['index.m3u8']), '/'),
           mediaRoot,
           streams,
           streamName,
           appName);
+  
       }
+    } else if (_.endsWith(path, 'live.m3u8') && type === 'add') {
+      // get this file copied over as its our initial adaptive stream
+      await handleABR(path);
+    } else if (_.endsWith(path, 'index.m3u8')) {
+      await handlePlaylist(
+        type,
+        _.join(_.union(_.initial(_.split(path, '/')), ['index.m3u8']), '/'),
+        mediaRoot,
+        streams,
+        streamName,
+        appName);
     }
   } catch (err) {
     console.log(err);
   }
 };
 
-const recordHls = (config, streams) => {
+const streamHls = (config, streams) => {
   const mediaRoot = config.http.mediaroot;
   console.log(`Start watcher - ${process.env.NODE_ENV}, ${mediaRoot}`);
   chokidar.watch(mediaRoot, {
@@ -116,7 +169,7 @@ const recordHls = (config, streams) => {
     persistent: true,
     ignoreInitial: true,
     awaitWriteFinish: {
-      stabilityThreshold: 6000,
+      stabilityThreshold: 5000,
       pollInterval: 100
     }
   }).on('add', (path) => onFile(path, 'add', mediaRoot, streams))
@@ -124,6 +177,6 @@ const recordHls = (config, streams) => {
 };
 
 module.exports = {
-  recordHls,
+  streamHls,
   on
 };
