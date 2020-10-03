@@ -1,7 +1,10 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 // listens to incoming rtmp streams. verifies the user against ex-auth using axios
 // sends to the ex-streamer an 'activation' action
 // listens to the ex-streamer-incoming queue for activation responses
+
 const {PubSub} = require('@google-cloud/pubsub');
 const grpc = require('grpc');
 const projectId = 'stoked-reality-284921';
