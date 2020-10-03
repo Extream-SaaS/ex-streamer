@@ -1,206 +1,400 @@
-// listens to incoming rtmp streams. verifies the user against ex-auth using axios
-// sends to the ex-streamer an 'activation' action
-// listens to the ex-streamer-incoming queue for activation responses
-const {PubSub} = require('@google-cloud/pubsub');
-const grpc = require('grpc');
-const projectId = 'stoked-reality-284921';
-const axios = require('axios');
-const exauthURL = process.env.EXAUTH;
-const exstreamerURL = process.env.EXSTREAMER;
+require('dotenv').config();
+const NodeMediaServer = require('node-media-server');
+const _ = require('lodash');
+const { join } = require('path');
+const querystring = require('querystring');
+const fs = require('./lib/fs');
+const hls = require('./lib/hls');
+const abr = require('./lib/abr');
+const cache = require('./lib/cache');
+const logger = require('./lib/logger');
+const utils = require('./lib/utils');
 
-// TODO: send the pod IP address or other identifier so that when receiving requests, check the identifier to ensure this pod is the right one for that made the request.
+const LOG_TYPE = 4;
+logger.setLogType(LOG_TYPE);
 
-// Instantiates a client
-const pubsub = new PubSub({grpc, projectId});
+// init RTMP server
+const init = async () => {
+  try {
+    // Fetch the container server address (IP:PORT)
+    // The IP is from the EC2 server.  The PORT is from the container.
+    // const SERVER_ADDRESS = process.env.NODE_ENV === 'production' ? await ecs.getServer() : '';
+    const SERVER_ADDRESS = '127.0.0.1';
 
-const NodeMediaServer = require('./');
-
-const config = {
-  rtmp: {
-    port: 1935,
-    chunk_size: 60000,
-    gop_cache: true,
-    ping: 30,
-    ping_timeout: 60
-  },
-  http: {
-    port: 8000,
-    mediaroot: './media',
-    webroot: './www',
-    allow_origin: '*',
-    api: true
-  },
-  auth: {
-    api: true,
-    api_user: 'admin',
-    api_pass: 'DNdHipVUM4'
-  },
-  trans: {
-    ffmpeg: '/usr/local/bin/ffmpeg',
-    tasks: [
-      {
-        app: 'rehearsal',
-        vc: "copy",
-        vcParam: [],
-        ac: "aac",
-        acParam: ['-ab', '64k', '-ac', '1', '-ar', '44100'],
-        hls: true,
-        hlsFlags: '[hls_time=2:hls_list_size=3:hls_flags=delete_segments]',
-        dash: true,
-        dashFlags: '[f=dash:window_size=3:extra_window_size=5]'
+    // Set the Node-Media-Server config.
+    const config = {
+      logType: LOG_TYPE,
+      rtmp: {
+        port: 1935,
+        chunk_size: 60000,
+        gop_cache: true,
+        ping: 30,
+        ping_timeout: 60
       },
-      {
-        app: 'recorder',
-        mp4: true,
-        mp4Flags: '[movflags=frag_keyframe+empty_moov]',
+      http: {
+        port: 8080,
+        mediaroot: process.env.MEDIA_ROOT || './media',
+        allow_origin: '*',
+        api: true
+      },
+      auth: {
+        api: false
+      },
+      relay: {
+        ffmpeg: process.env.FFMPEG_PATH || '/usr/local/bin/ffmpeg',
+        tasks: [
+          {
+            app: 'stream',
+            mode: 'push',
+            edge: 'rtmp://127.0.0.1/hls',
+          },
+        ],
+      },
+      trans: {
+        ffmpeg: process.env.FFMPEG_PATH || '/usr/local/bin/ffmpeg',
+        tasks: [
+          {
+            app: 'hls',
+            hls: true,
+            raw: [
+              '-vf',
+              'scale=w=640:h=360:force_original_aspect_ratio=decrease',
+              '-c:a',
+              'aac',
+              '-ar',
+              '48000',
+              '-c:v',
+              'libx264',
+              '-preset',
+              'veryfast',
+              '-profile:v',
+              'main',
+              '-crf',
+              '20',
+              '-sc_threshold',
+              '0',
+              '-g',
+              '48',
+              '-keyint_min',
+              '48',
+              '-hls_time',
+              '6',
+              '-hls_list_size',
+              '10',
+              '-hls_flags',
+              'delete_segments',
+              '-max_muxing_queue_size',
+              '1024',
+              '-start_number',
+              '${timeInMilliseconds}',
+              '-b:v',
+              '800k',
+              '-maxrate',
+              '856k',
+              '-bufsize',
+              '1200k',
+              '-b:a',
+              '96k',
+              '-hls_segment_filename',
+              '${mediaroot}/${streamName}/360p/%03d.ts',
+              '${mediaroot}/${streamName}/360p/index.m3u8',
+              '-vf',
+              'scale=w=842:h=480:force_original_aspect_ratio=decrease',
+              '-c:a',
+              'aac',
+              '-ar',
+              '48000',
+              '-c:v',
+              'libx264',
+              '-preset',
+              'veryfast',
+              '-profile:v',
+              'main',
+              '-crf',
+              '20',
+              '-sc_threshold',
+              '0',
+              '-g',
+              '48',
+              '-keyint_min',
+              '48',
+              '-hls_time',
+              '6',
+              '-hls_list_size',
+              '10',
+              '-hls_flags',
+              'delete_segments',
+              '-max_muxing_queue_size',
+              '1024',
+              '-start_number',
+              '${timeInMilliseconds}',
+              '-b:v',
+              '1400k',
+              '-maxrate',
+              '1498k',
+              '-bufsize',
+              '2100k',
+              '-b:a',
+              '128k',
+              '-hls_segment_filename',
+              '${mediaroot}/${streamName}/480p/%03d.ts',
+              '${mediaroot}/${streamName}/480p/index.m3u8',
+              '-vf',
+              'scale=w=1280:h=720:force_original_aspect_ratio=decrease',
+              '-c:a',
+              'aac',
+              '-ar',
+              '48000',
+              '-c:v',
+              'libx264',
+              '-preset',
+              'veryfast',
+              '-profile:v',
+              'main',
+              '-crf',
+              '20',
+              '-sc_threshold',
+              '0',
+              '-g',
+              '48',
+              '-keyint_min',
+              '48',
+              '-hls_time',
+              '6',
+              '-hls_list_size',
+              '10',
+              '-hls_flags',
+              'delete_segments',
+              '-max_muxing_queue_size',
+              '1024',
+              '-start_number',
+              '${timeInMilliseconds}',
+              '-b:v',
+              '2800k',
+              '-maxrate',
+              '2996k',
+              '-bufsize',
+              '4200k',
+              '-b:a',
+              '128k',
+              '-hls_segment_filename',
+              '${mediaroot}/${streamName}/720p/%03d.ts',
+              '${mediaroot}/${streamName}/720p/index.m3u8'
+            ],
+            ouPaths: [
+              '${mediaroot}/${streamName}/360p',
+              '${mediaroot}/${streamName}/480p',
+              '${mediaroot}/${streamName}/720p'
+            ],
+            hlsFlags: '',
+            cleanup: false,
+          },
+        ]
+      },
+    };
+
+    // Construct the NodeMediaServer
+    const nms = new NodeMediaServer(config);
+
+    // Create the maps we'll need to track the current streams.
+    this.dynamicSessions = new Map();
+    this.streams = new Map();
+
+    // Start the VOD S3 file watcher and sync.
+    hls.recordHls(config, this.streams);
+
+    //
+    // HLS callbacks
+    //
+    hls.on('newHlsStream', async (name) => {
+      // Create the ABR HLS playlist file.
+      await abr.createPlaylist(config.http.mediaroot, name);
+      // Send the "stream key" <-> "IP:PORT" mapping to Redis
+      // This tells the Origin which Server has the HLS files
+      await cache.set(name, SERVER_ADDRESS);
+    });
+
+    //
+    // RTMP callbacks
+    //
+    nms.on('preConnect', (id, args) => {
+      logger.log('[NodeEvent on preConnect]', `id=${id} args=${JSON.stringify(args)}`);
+      // Pre connect authorization
+      // let session = nms.getSession(id);
+      // session.reject();
+    });
+    
+    nms.on('postConnect', (id, args) => {
+      logger.log('[NodeEvent on postConnect]', `id=${id} args=${JSON.stringify(args)}`);
+    });
+    
+    nms.on('doneConnect', (id, args) => {
+      logger.log('[NodeEvent on doneConnect]', `id=${id} args=${JSON.stringify(args)}`);
+    });
+    
+    nms.on('prePublish', (id, StreamPath, args) => {
+      logger.log('[NodeEvent on prePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+      // Pre publish authorization
+      // let session = nms.getSession(id);
+      // session.reject();
+    });
+    
+    nms.on('postPublish', async (id, StreamPath, args) => {
+      logger.log('[NodeEvent on postPublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+      if (StreamPath.indexOf('/hls/') != -1) {
+        // Set the "stream key" <-> "id" mapping for this RTMP/HLS session
+        // We use this when creating the DVR HLS playlist name on S3.
+        const name = StreamPath.split('/').pop();
+        this.streams.set(name, id);
+      } else if (StreamPath.indexOf('/stream/') != -1) {
+        //
+        // Start Relay to youtube, facebook, and/or twitch
+        //
+        if (args.youtube) {
+          const params = utils.getParams(args, 'youtube_');
+          const query = _.isEmpty(params) ? '' : `?${querystring.stringify(params)}`;
+          const url = `rtmp://a.rtmp.youtube.com/live2/${args.youtube}${query}`;
+          const session = nms.nodeRelaySession({
+            ffmpeg: config.relay.ffmpeg,
+            inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
+            ouPath: url
+          });
+          session.id = `youtube-${id}`;
+          session.on('end', (id) => {
+            this.dynamicSessions.delete(id);
+          });
+          this.dynamicSessions.set(session.id, session);
+          session.run();
+        }
+        if (args.facebook) {
+          const params = utils.getParams(args, 'facebook_');
+          const query = _.isEmpty(params) ? '' : `?${querystring.stringify(params)}`;
+          const url = `rtmps://live-api-s.facebook.com:443/rtmp/${args.facebook}${query}`;
+          session = nms.nodeRelaySession({
+            ffmpeg: config.relay.ffmpeg,
+            inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
+            ouPath: url
+          });
+          session.id = `facebook-${id}`;
+          session.on('end', (id) => {
+            this.dynamicSessions.delete(id);
+          });
+          this.dynamicSessions.set(session.id, session);
+          session.run();
+        }
+        if (args.twitch) {
+          const params = utils.getParams(args, 'twitch_');
+          const query = _.isEmpty(params) ? '' : `?${querystring.stringify(params)}`;
+          const url = `rtmp://live-jfk.twitch.tv/app/${args.twitch}${query}`;
+          session = nms.nodeRelaySession({
+            ffmpeg: config.relay.ffmpeg,
+            inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
+            ouPath: url,
+            raw: [
+              '-c:v',
+              'libx264',
+              '-preset',
+              'veryfast',
+              '-c:a',
+              'copy',
+              '-b:v',
+              '3500k',
+              '-maxrate',
+              '3750k',
+              '-bufsize',
+              '4200k',
+              '-s',
+              '1280x720',
+              '-r',
+              '30',
+              '-f',
+              'flv',
+              '-max_muxing_queue_size',
+              '1024',
+            ]
+          });
+          session.id = `twitch-${id}`;
+          session.on('end', (id) => {
+            this.dynamicSessions.delete(id);
+          });
+          this.dynamicSessions.set(session.id, session);
+          session.run();
+        }
       }
-    ]
+    });
+    
+    nms.on('donePublish', async (id, StreamPath, args) => {
+      logger.log('[NodeEvent on donePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+      if (StreamPath.indexOf('/hls/') != -1) {
+        const name = StreamPath.split('/').pop();
+        // Delete the Redis cache key for this stream
+        await cache.del(name);
+        // Wait a few minutes before deleting the HLS files on this Server
+        // for this session
+        const timeoutMs = _.isEqual(process.env.NODE_ENV, 'development') ?
+          1000 : 
+          2 * 60 * 1000;
+        await utils.timeout(timeoutMs);
+        if (!_.isEqual(await cache.get(name), SERVER_ADDRESS)) {
+          // Only clean up if the stream isn't running.  
+          // The user could have terminated then started again.
+          try {
+            // Cleanup directory
+            logger.log('[Delete HLS Directory]', `dir=${join(config.http.mediaroot, name)}`);
+            this.streams.delete(name);
+            fs.rmdirSync(join(config.http.mediaroot, name));
+          } catch (err) {
+            logger.error(err);
+          }
+        }
+      } else if (StreamPath.indexOf('/stream/') != -1) {
+        //
+        // Stop the Relay's
+        //
+        if (args.youtube) {
+          let session = this.dynamicSessions.get(`youtube-${id}`);
+          if (session) {
+            session.end();
+            this.dynamicSessions.delete(`youtube-${id}`);
+          }
+        }
+        if (args.facebook) {
+          let session = this.dynamicSessions.get(`facebook-${id}`);
+          if (session) {
+            session.end();
+            this.dynamicSessions.delete(`facebook-${id}`);
+          }
+        }
+        if (args.twitch) {
+          let session = this.dynamicSessions.get(`twitch-${id}`);
+          if (session) {
+            session.end();
+            this.dynamicSessions.delete(`twitch-${id}`);
+          }
+        }
+      }
+    });
+    
+    nms.on('prePlay', (id, StreamPath, args) => {
+      logger.log('[NodeEvent on prePlay]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+      // Pre play authorization
+      // let session = nms.getSession(id);
+      // session.reject();
+    });
+    
+    nms.on('postPlay', (id, StreamPath, args) => {
+      logger.log('[NodeEvent on postPlay]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+    });
+    
+    nms.on('donePlay', (id, StreamPath, args) => {
+      logger.log('[NodeEvent on donePlay]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+    });
+
+    // Run the NodeMediaServer
+    nms.run();
+  } catch (err) {
+    logger.log('Can\'t start app', err);
+    process.exit();
   }
 };
-
-function push(
-  topicName = 'ex-streamer',
-  data = {}
-) {
-
-  async function publishMessage() {
-    const dataBuffer = Buffer.from(JSON.stringify(data));
-
-    const messageId = await pubsub.topic(topicName).publish(dataBuffer);
-    return messageId;
-  }
-
-  return publishMessage();
-}
-function pull(
-  subscriptionName = 'ex-streamer-incoming',
-  timeout = 60
-) {
-  const subscription = pubsub.subscription(subscriptionName);
-  let messageCount = 0;
-  const messageHandler = message => {
-    console.log(`Received message ${message.id}:`);
-    messageCount += 1;
-    const body = message.data ? JSON.parse(Buffer.from(message.data, 'base64').toString()) : null;
-    console.log(body);
-    if (body.error || body.status === 'expired') {
-      const session = nms.getSession(`${body.payload.sessionId}`);
-      if (session) {
-        session.reject();
-      }
-      console.log('rejecting session');
-    }
-    // "Ack" (acknowledge receipt of) the message
-    message.ack();
-  };
-  subscription.on('message', messageHandler);
-  // regurgitate the handler occasionally \\
-  setTimeout(() => {
-    subscription.removeListener('message', messageHandler);
-    console.log(`${messageCount} message(s) received. Refreshing.`);
-    pull(subscriptionName, timeout);
-  }, timeout * 1000);
-}
-
-pull();
-
-const verifyUser = async (token) => {
-  const config = {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  };
-  const resp = await axios.get(`${exauthURL}/auth/user`, config);
-  if (resp.status !== 200) {
-    throw new Error('not logged in');
-  }
-  const exauthUser = resp.data;
-  console.log('verify url', `${exauthURL}/auth/user`);
-  return exauthUser;
-};
-
-let nms = new NodeMediaServer(config);
-nms.run();
-
-nms.on('preConnect', (id, args) => {
-  console.log('[NodeEvent on preConnect]', `id=${id} args=${JSON.stringify(args)}`);
-});
-
-nms.on('postConnect', (id, args) => {
-  console.log('[NodeEvent on postConnect]', `id=${id} args=${JSON.stringify(args)}`);
-});
-
-nms.on('doneConnect', (id, args) => {
-  console.log('[NodeEvent on doneConnect]', `id=${id} args=${JSON.stringify(args)}`);
-});
-
-nms.on('prePublish', async (id, StreamPath, args) => {
-  console.log('[NodeEvent on prePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
-  try {
-    const StreamObj = StreamPath.split('/');
-    const userId = StreamObj[StreamObj.length - 1];
-    const token = userId.split('-')[1];
-    const user = await verifyUser(token);
-    push('ex-streamer', {
-      domain: 'client',
-      action: 'rtmp',
-      command: 'activate',
-      payload: {
-        id: userId.split('-')[0],
-        sessionId: id,
-        streamUrl: `${exstreamerURL}${StreamPath}`
-      },
-      user
-    });
-  } catch (error) {
-    console.log('error', error);
-    const session = nms.getSession(id);
-    session.reject();
-  }
-});
-
-nms.on('postPublish', (id, StreamPath, args) => {
-  console.log('[NodeEvent on postPublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
-  // user has begin publishing. Lets invoke packager and ffmpeg
-  
-});
-
-nms.on('donePublish', async (id, StreamPath, args) => {
-  console.log('[NodeEvent on donePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
-  try {
-    const StreamObj = StreamPath.split('/');
-    const userId = StreamObj[StreamObj.length - 1];
-    const token = userId.split('-')[1];
-    const user = await verifyUser(token);
-    push('ex-streamer', {
-      domain: 'client',
-      action: 'rtmp',
-      command: 'complete',
-      payload: {
-        id: userId.split('-')[0],
-        sessionId: id,
-        streamUrl: [exstreamerURL, StreamPath]
-      },
-      user
-    });
-  } catch (error) {
-    console.log('error', error);
-    const session = nms.getSession(id);
-    session.reject();
-  }
-});
-
-nms.on('prePlay', (id, StreamPath, args) => {
-  console.log('[NodeEvent on prePlay]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
-  // let session = nms.getSession(id);
-  // session.reject();
-});
-
-nms.on('postPlay', (id, StreamPath, args) => {
-  console.log('[NodeEvent on postPlay]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
-});
-
-nms.on('donePlay', (id, StreamPath, args) => {
-  console.log('[NodeEvent on donePlay]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
-});
-
+init();

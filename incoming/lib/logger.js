@@ -48,6 +48,5 @@ const ffdebug = (...args) => {
 module.exports = {
   LOG_TYPES,
   setLogType,
-
   log, error, debug, ffdebug
 }
