@@ -115,12 +115,12 @@ const init = async () => {
           {
             app: 'live',
             mode: 'push',
-            edge: `rtmp://${exstreamerURL}/hls`,
+            edge: `rtmp://127.0.0.1/hls`,
           },
           {
             app: 'recorder',
             mode: 'push',
-            edge: `rtmp://${exstreamerURL}/hls?record=true`,
+            edge: `rtmp://127.0.0.1/hls?record=true`,
           },
         ],
       },
@@ -357,7 +357,7 @@ const init = async () => {
           const url = `rtmp://${process.env.YOUTUBE_URL}/${args.youtube}${query}`;
           const session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
-            inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
+            inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
             ouPath: url
           });
           session.id = `youtube-${id}`;
@@ -373,7 +373,7 @@ const init = async () => {
           const url = `rtmps://${process.env.FACEBOOK_URL}/${args.facebook}${query}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
-            inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
+            inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
             ouPath: url
           });
           session.id = `facebook-${id}`;
@@ -389,7 +389,7 @@ const init = async () => {
           const url = `rtmp://${process.env.TWITCH_URL}/${args.twitch}${query}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
-            inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
+            inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
             ouPath: url,
             raw: [
               '-c:v',
