@@ -8,14 +8,16 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:/usr/lib:/usr/lib64:/lib:/li
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
-
 COPY . .
 
 COPY --from=jrottenberg/ffmpeg:4.3.1-alpine311 /usr/local/ /usr/local/
 
+RUN npm ci
+
 EXPOSE 1935 8000
 
 ENV GOOGLE_APPLICATION_CREDENTIALS=$GCLOUD_AUTH
+
+ENV NODE_ENV=production
 
 CMD ["npm","start"]
