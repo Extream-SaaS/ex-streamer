@@ -1,6 +1,6 @@
 ARG GCLOUD_AUTH="/usr/src/app/service-accounts/stoked-reality.json"
 
-FROM node:lts
+FROM node:lts-alpine
 
 RUN apk add --no-cache --update libcrypto1.1 libssl1.1 libgomp expat git python3
 
