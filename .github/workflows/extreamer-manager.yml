@@ -60,6 +60,7 @@ jobs:
           EXAUTH: ${{ secrets.EXAUTH }}
           EXRTMP: ${{ secrets.EXRTMP }}
           EXSTREAMER: ${{ secrets.EXSTREAMER }}
+          EXHLS: ${{ secrets.EXHLS }}
 
       - name: Deploy to GCP
         id: Deploy

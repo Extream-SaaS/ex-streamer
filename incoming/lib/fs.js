@@ -9,6 +9,13 @@ functions.readdir = (dirPath, options) => new Promise((resolve, reject) => {
   });
 });
 
+functions.copyFile = (src, dest) => new Promise((resolve, reject) => {
+  fs.copyFile(src, dest, (err) => {
+    if (err) return reject(err);
+    return resolve();
+  });
+});
+
 functions.writeFile = (file, data) => new Promise((resolve, reject) => {
   fs.writeFile(file, data, { encoding: 'utf8' }, (err) => {
     if (err) return reject(err);

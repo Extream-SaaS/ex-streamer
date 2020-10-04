@@ -18,13 +18,6 @@ const on = (eventName, listener) => {
 
 const VOD_APP_NAME = '720p';
 
-// Function to create a unique VOD filename for each stream
-const getVodName = (streams, streamName) => {
-  console.log('get vod target', streamName, streams);
-  if (!streams.has(streamName)) return false;
-  return `vod-${streams.get(streamName).id}.m3u8`;
-};
-
 // HLS - test4/720p/index.m3u8
 const handlePlaylist = async (type, path, mediaRoot, streams, streamName, appName) => {
   console.log('handlePlaylist', path);
@@ -35,7 +28,7 @@ const handlePlaylist = async (type, path, mediaRoot, streams, streamName, appNam
   }
   try {
     await uploadBucket.upload(path, {
-      destination: path,
+      destination: `media${path}`,
       contentType: 'application/x-mpegURL',
       validation: 'crc32c',
       metadata: {
@@ -56,23 +49,22 @@ const handlePlaylistCopy = async (path, mediaRoot, streams, streamName, appName)
 
     // Put /vod.m3u8 with all segments and end tag.
     let vodM3u8;
-    const vodFilename = getVodName(streams, streamName);
+    const vodFilename = 'vod.m3u8';
+    const liveFilename = path.split('\\').pop().split('/').pop();
+    const vodPath = path.replace(liveFilename, vodFilename);
     if (vodFilename) {
-      const vodPath = join(mediaRoot, streamName, vodFilename);
       if (await fs.exists(vodPath)) {
         // Read existing vod playlist.
         vodM3u8 = await fs.readFile(vodPath);
       } else {
-        // New HLS Stream.
-        console.log('emit newHlsStream event');
-        nodeEvent.emit("newHlsStream", streamName);
+        await fs.copyFile(path, vodPath);
       }
       vodM3u8 = m3u8.sync_m3u8(liveM3u8, vodM3u8, appName);
       const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
       try {
         await fs.writeFile(vodPath, vodM3u8);
-        await uploadBucket.upload(path, {
-          destination: `recording/${streamName}/${appName}/${vodFilename}`,
+        await uploadBucket.upload(vodPath, {
+          destination: `media${vodPath}`,
           contentType: 'application/x-mpegURL',
           validation: 'crc32c',
         });
@@ -83,16 +75,12 @@ const handlePlaylistCopy = async (path, mediaRoot, streams, streamName, appName)
   }
 };
 
-const handleSegmentCopy = async (path) => {
-
-};
-
 // TS  - media/test4/720p/20200504-1588591755.ts
 const handleSegment = async (path) => {
   const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
   try {
     await uploadBucket.upload(path, {
-      destination: path,
+      destination: `media${path}`,
       validation: 'crc32c',
     });
   } catch(err) {
@@ -105,7 +93,7 @@ const handleABR = async (path) => {
   const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
   try {
     await uploadBucket.upload(path, {
-      destination: path,
+      destination: `media${path}`,
       contentType: 'application/x-mpegURL',
       validation: 'crc32c',
     });
@@ -134,8 +122,6 @@ const onFile = async (absolutePath, type, mediaRoot, streams) => {
       await handleSegment(absolutePath);
 
       if (_.isEqual(appName, VOD_APP_NAME) && record) {
-        // TODO: Copy target VOD rate to the new directory on gcloud
-        await handleSegmentCopy(absolutePath);
         await handlePlaylistCopy(
           _.join(_.union(_.initial(_.split(absolutePath, '/')), ['index.m3u8']), '/'),
           mediaRoot,

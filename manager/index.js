@@ -149,10 +149,12 @@ exports.manage = async (event, context, callback) => {
           }
           data.streamkey = streamkey;
           data.url = url;
+          data.watcherUrl = `${process.env.EXHLS}/media/${streamkey}/index.m3u8`;
 
           await docRef.set({
             streamkey,
             url,
+            watcherUrl: data.watcherUrl,
             updatedBy: user.id,
             updatedAt: Firestore.FieldValue.serverTimestamp()
           }, {
