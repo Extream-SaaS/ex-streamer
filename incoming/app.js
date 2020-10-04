@@ -56,11 +56,11 @@ function pull(
       const session = nms.getSession(`${body.payload.sessionId}`);
       if (session) {
         session.reject();
+        // "Ack" (acknowledge receipt of) the message
+        message.ack();
+        console.log('rejecting session');
       }
-      console.log('rejecting session');
     }
-    // "Ack" (acknowledge receipt of) the message
-    message.ack();
   };
   subscription.on('message', messageHandler);
   // regurgitate the handler occasionally \\
@@ -101,7 +101,7 @@ const init = async () => {
       },
       http: {
         port: 8000,
-        mediaroot: process.env.MEDIA_ROOT || './media',
+        mediaroot: process.env.MEDIA_ROOT || './files',
         allow_origin: '*',
         api: true
       },
