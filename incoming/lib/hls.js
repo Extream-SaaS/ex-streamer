@@ -174,6 +174,7 @@ const streamHls = (config, streams) => {
     }
   }).on('add', (path) => onFile(path, 'add', mediaRoot, streams))
     .on('change', (path) => onFile(path, 'change', mediaRoot, streams));
+  console.log('chokidar instance', chokidar);
 };
 
 module.exports = {

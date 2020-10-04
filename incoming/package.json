@@ -31,7 +31,7 @@
     "fast-crc32c": "^2.0.0",
     "grpc": "^1.24.3",
     "lodash": "^4.17.15",
-    "node-media-server": "https://github.com/rgfindl/Node-Media-Server",
+    "node-media-server": "git+https://github.com/rgfindl/Node-Media-Server.git",
     "redis": "^3.0.2"
   },
   "engines": {
