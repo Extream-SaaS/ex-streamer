@@ -12,8 +12,6 @@ COPY package*.json ./
 
 COPY . .
 
-RUN npm ci
-
 COPY --from=jrottenberg/ffmpeg:4.3.1-alpine311 /usr/local/ /usr/local/
 
 EXPOSE 1935 8000
