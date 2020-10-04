@@ -321,15 +321,16 @@ const init = async () => {
       try {
         if (StreamPath.indexOf('/recorder/') !== -1 || StreamPath.indexOf('/live/') !== -1) {
           const StreamObj = StreamPath.split('/');
-          const userId = StreamObj[StreamObj.length - 1];
-          const token = userId.split('-')[1];
+          const streamKey = StreamObj[StreamObj.length - 1];
+          const streamId = streamKey.split('-')[0];
+          const token = streamKey.split('-')[1];
           const user = await verifyUser(token);
           push('ex-streamer', {
             domain: 'client',
             action: 'rtmp',
             command: 'activate',
             payload: {
-              id: userId.split('-')[0],
+              id: streamId,
               sessionId: id,
               streamUrl: `${exstreamerURL}${StreamPath}`
             },
@@ -346,7 +347,8 @@ const init = async () => {
     nms.on('postPublish', async (id, StreamPath, args) => {
       logger.log('[NodeEvent on postPublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
       if (StreamPath.indexOf('/hls/') !== -1) {
-        const name = StreamPath.split('/').pop();
+        const streamKey = StreamPath.split('/').pop();
+        const name = streamKey.split('-')[0];
         this.streams.set(name, { id, record: (args.record && args.record === 'true'), abr: false });
       } else if (StreamPath.indexOf('/recorder/') !== -1 || StreamPath.indexOf('/live/') !== -1) {
         //
