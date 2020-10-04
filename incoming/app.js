@@ -41,6 +41,7 @@ function push(
   return publishMessage();
 }
 function pull(
+  nms,
   subscriptionName = 'ex-streamer-incoming',
   timeout = 60
 ) {
@@ -273,10 +274,10 @@ const init = async () => {
       },
     };
 
-    pull();
-
     // Construct the NodeMediaServer
     const nms = new NodeMediaServer(config);
+
+    pull(nms);
 
     // Create the maps we'll need to track the current streams.
     this.dynamicSessions = new Map();
