@@ -36,7 +36,9 @@ spec:
           image: gcr.io/PROJECT_ID/IMAGE:TAG
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
-              value: /usr/src/app/service-accounts/stoked-reality.json
+              value: /app/service-accounts/stoked-reality.json
+            - name: MEDIA_ROOT
+              value: /files
             - name: ASSETS_BUCKET
               value: ex-streamer
             - name: EXAUTH

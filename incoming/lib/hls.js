@@ -123,21 +123,21 @@ const onFile = async (absolutePath, type, mediaRoot, streams) => {
   try {
     const path = _.trim(_.replace(absolutePath, mediaRoot, ''), '/');
     const paths = _.split(path, '/');
-    const streamName = _.nth(paths, 1);
-    const appName = _.nth(paths, 2);
+    const streamName = _.nth(paths, 0);
+    const appName = _.nth(paths, 1);
     console.log(type, path);
     // only send adds for video
     if (_.endsWith(path, '.ts') && type === 'add') {
       const stream = streams.get(streamName);
       const record = stream.record;
       // TODO: Handle recording on demand
-      await handleSegment(path);
+      await handleSegment(absolutePath);
 
       if (_.isEqual(appName, VOD_APP_NAME) && record) {
         // TODO: Copy target VOD rate to the new directory on gcloud
-        await handleSegmentCopy(path);
+        await handleSegmentCopy(absolutePath);
         await handlePlaylistCopy(
-          _.join(_.union(_.initial(_.split(path, '/')), ['index.m3u8']), '/'),
+          _.join(_.union(_.initial(_.split(absolutePath, '/')), ['index.m3u8']), '/'),
           mediaRoot,
           streams,
           streamName,
@@ -146,11 +146,11 @@ const onFile = async (absolutePath, type, mediaRoot, streams) => {
       }
     } else if (_.endsWith(path, 'live.m3u8') && type === 'add') {
       // get this file copied over as its our initial adaptive stream
-      await handleABR(path);
+      await handleABR(absolutePath);
     } else if (_.endsWith(path, 'index.m3u8')) {
       await handlePlaylist(
         type,
-        _.join(_.union(_.initial(_.split(path, '/')), ['index.m3u8']), '/'),
+        _.join(_.union(_.initial(_.split(absolutePath, '/')), ['index.m3u8']), '/'),
         mediaRoot,
         streams,
         streamName,
