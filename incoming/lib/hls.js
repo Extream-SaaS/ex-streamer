@@ -19,7 +19,7 @@ const on = (eventName, listener) => {
 const VOD_APP_NAME = '720p';
 
 // HLS - test4/720p/index.m3u8
-const handlePlaylist = async (type, path, mediaRoot, streams, streamName, appName) => {
+const handlePlaylist = async (type, path, mediaRoot, stream, streamName, appName) => {
   console.log('handlePlaylist', path);
   const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
   if (type === 'add' && !streams.get(streamName).abr) {
@@ -28,7 +28,7 @@ const handlePlaylist = async (type, path, mediaRoot, streams, streamName, appNam
   }
   try {
     await uploadBucket.upload(path, {
-      destination: `media${path}`,
+      destination: `media${path.replace(streamName, stream.name)}`,
       contentType: 'application/x-mpegURL',
       validation: 'crc32c',
       metadata: {
@@ -41,7 +41,7 @@ const handlePlaylist = async (type, path, mediaRoot, streams, streamName, appNam
 };
 
 // HLS - test4/720p/index.m3u8
-const handlePlaylistCopy = async (path, mediaRoot, streams, streamName, appName) => {
+const handlePlaylistCopy = async (path, mediaRoot, stream, streamName, appName) => {
   console.log('handlePlaylist copy', path);
   if (await fs.exists(path)) {
     console.log('====== path ======', path);
@@ -64,7 +64,7 @@ const handlePlaylistCopy = async (path, mediaRoot, streams, streamName, appName)
       try {
         await fs.writeFile(vodPath, vodM3u8);
         await uploadBucket.upload(vodPath, {
-          destination: `media${vodPath}`,
+          destination: `media${vodPath.replace(streamName, stream.name)}`,
           contentType: 'application/x-mpegURL',
           validation: 'crc32c',
         });
@@ -76,11 +76,11 @@ const handlePlaylistCopy = async (path, mediaRoot, streams, streamName, appName)
 };
 
 // TS  - media/test4/720p/20200504-1588591755.ts
-const handleSegment = async (path) => {
+const handleSegment = async (path, stream, streamName) => {
   const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
   try {
     await uploadBucket.upload(path, {
-      destination: `media${path}`,
+      destination: `media${path.replace(streamName, stream.name)}`,
       validation: 'crc32c',
     });
   } catch(err) {
@@ -88,12 +88,12 @@ const handleSegment = async (path) => {
   }
 };
 
-const handleABR = async (path) => {
+const handleABR = async (path, stream, streamName) => {
   console.log('====== HANDLE LIVE.m3u8 ======', path);
   const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
   try {
     await uploadBucket.upload(path, {
-      destination: `media${path}`,
+      destination: `media${path.replace(streamName, stream.name)}`,
       contentType: 'application/x-mpegURL',
       validation: 'crc32c',
     });
@@ -118,22 +118,22 @@ const onFile = async (absolutePath, type, mediaRoot, streams) => {
     const record = stream.record;
     // only send adds for video
     if (_.endsWith(path, '.ts') && type === 'add') {
-      await handleSegment(absolutePath);
+      await handleSegment(absolutePath, stream, streamName);
       await handlePlaylist(
         type,
         _.join(_.union(_.initial(_.split(absolutePath, '/')), ['index.m3u8']), '/'),
         mediaRoot,
-        streams,
+        stream,
         streamName,
         appName);
     } else if (_.endsWith(path, 'live.m3u8') && type === 'add') {
       // get this file copied over as its our initial adaptive stream
-      await handleABR(absolutePath);
+      await handleABR(absolutePath, stream, streamName);
     } else if (_.endsWith(path, 'index.m3u8') && _.isEqual(appName, VOD_APP_NAME) && record) {
       await handlePlaylistCopy(
         _.join(_.union(_.initial(_.split(absolutePath, '/')), ['index.m3u8']), '/'),
         mediaRoot,
-        streams,
+        stream,
         streamName,
         appName);
     }

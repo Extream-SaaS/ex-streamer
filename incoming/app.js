@@ -67,7 +67,7 @@ function pull(
   setTimeout(() => {
     subscription.removeListener('message', messageHandler);
     console.log(`${messageCount} message(s) received. Refreshing.`);
-    pull(subscriptionName, timeout);
+    pull(nms, subscriptionName, timeout);
   }, timeout * 1000);
 }
 
@@ -349,7 +349,7 @@ const init = async () => {
       if (StreamPath.indexOf('/hls/') !== -1) {
         const streamKey = StreamPath.split('/').pop();
         const name = streamKey.split('-')[0];
-        this.streams.set(name, { id, record: (args.record && args.record === 'true'), abr: false });
+        this.streams.set(streamKey, { name, id, record: (args.record && args.record === 'true'), abr: false });
       } else if (StreamPath.indexOf('/recorder/') !== -1 || StreamPath.indexOf('/live/') !== -1) {
         //
         // Start Relay to youtube, facebook, and/or twitch
