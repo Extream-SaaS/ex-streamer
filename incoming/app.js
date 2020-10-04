@@ -349,6 +349,7 @@ const init = async () => {
       if (StreamPath.indexOf('/hls/') !== -1) {
         const streamKey = StreamPath.split('/').pop();
         const name = streamKey.split('-')[0];
+        console.log('stream name', streamKey);
         this.streams.set(streamKey, { name, id, record: (args.record && args.record === 'true'), abr: false });
       } else if (StreamPath.indexOf('/recorder/') !== -1 || StreamPath.indexOf('/live/') !== -1) {
         //

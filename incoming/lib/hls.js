@@ -22,7 +22,7 @@ const VOD_APP_NAME = '720p';
 const handlePlaylist = async (type, path, mediaRoot, stream, streamName, appName) => {
   console.log('handlePlaylist', path);
   const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
-  if (type === 'add' && stream.abr) {
+  if (type === 'add' && !stream.abr) {
     // create the ABR file
     nodeEvent.emit("newHlsStream", streamName);
   }
@@ -113,7 +113,7 @@ const onFile = async (absolutePath, type, mediaRoot, streams) => {
     const paths = _.split(path, '/');
     const streamName = _.nth(paths, 0);
     const appName = _.nth(paths, 1);
-    console.log(type, path);
+    console.log(type, path, streamName);
     const stream = streams.get(streamName);
     const record = stream.record;
     // only send adds for video
