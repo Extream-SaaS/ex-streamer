@@ -27,7 +27,7 @@ const handlePlaylist = async (type, path, mediaRoot, stream, streamName, appName
     nodeEvent.emit("newHlsStream", streamName);
   }
   try {
-    // read stream into memory then hold for 20 seconds before uploading as we want to sit behind the edge
+    // read stream into memory then hold for 25 seconds before uploading as we want to sit behind the edge
     const playlist = await fs.readFile(path);
     setTimeout(() => {
       console.log('uploading playlist file');
@@ -44,7 +44,7 @@ const handlePlaylist = async (type, path, mediaRoot, stream, streamName, appName
       }).catch(err => {
         console.log('error uploading', err);
       });
-    }, 20000);
+    }, 25000);
   } catch(err) {
     console.log('======= ERROR UPLOADING FILE ========', err);
   }
