@@ -20,6 +20,7 @@ const hls = require('./lib/hls');
 const abr = require('./lib/abr');
 const logger = require('./lib/logger');
 const utils = require('./lib/utils');
+const { Stream } = require('stream');
 
 const hlsOutput = [
   '-vf',
@@ -330,7 +331,7 @@ const init = async () => {
         //
         let url, session, params, query;
         if (StreamPath.indexOf('/recorder/') !== -1) {
-          url = `rtmp://${exstreamerURL}/hls-record`;
+          url = `rtmp://${exstreamerURL}/hls-record/${StreamPath}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
             inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
@@ -343,7 +344,7 @@ const init = async () => {
           this.dynamicSessions.set(session.id, session);
           session.run();
         } else if (StreamPath.indexOf('/live/') !== -1) {
-          url = `rtmp://${exstreamerURL}/hls`;
+          url = `rtmp://${exstreamerURL}/hls/${StreamPath}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
             inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
