@@ -334,7 +334,8 @@ const init = async () => {
           url = `rtmp://${exstreamerURL}/${StreamPath.replace('recorder/', 'hls-record/')}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
-            inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
+            // inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
+            inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
             ouPath: url
           });
           session.id = `record-${id}`;
@@ -347,7 +348,8 @@ const init = async () => {
           url = `rtmp://${exstreamerURL}/${StreamPath.replace('live/', 'hls/')}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
-            inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
+            // inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
+            inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
             ouPath: url
           });
           session.id = `live-${id}`;
