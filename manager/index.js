@@ -149,7 +149,7 @@ exports.manage = async (event, context, callback) => {
           }
           data.streamkey = streamkey;
           data.url = url;
-          data.watcherUrl = `${process.env.EXHLS}/media/${docRef.id}/live.m3u8`;
+          data.watcherUrl = `${process.env.EXHLS}/media/files/${docRef.id}/live.m3u8`;
 
           await docRef.set({
             streamkey,
