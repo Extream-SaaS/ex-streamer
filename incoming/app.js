@@ -331,7 +331,7 @@ const init = async () => {
         //
         let url, session, params, query;
         if (StreamPath.indexOf('/recorder/') !== -1) {
-          url = `rtmp://${exstreamerURL}/hls-record/${StreamPath}`;
+          url = `rtmp://${exstreamerURL}/${StreamPath.replace('recorder/', 'hls-record/')}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
             inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
@@ -344,7 +344,7 @@ const init = async () => {
           this.dynamicSessions.set(session.id, session);
           session.run();
         } else if (StreamPath.indexOf('/live/') !== -1) {
-          url = `rtmp://${exstreamerURL}/hls/${StreamPath}`;
+          url = `rtmp://${exstreamerURL}/${StreamPath.replace('live/', 'hls/')}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
             inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
