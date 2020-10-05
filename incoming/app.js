@@ -8,8 +8,6 @@ if (process.env.NODE_ENV !== 'production') {
 const {PubSub} = require('@google-cloud/pubsub');
 const grpc = require('grpc');
 const projectId = 'stoked-reality-284921';
-const Redis = require('ioredis');
-const redis = new Redis();
 const axios = require('axios');
 const exauthURL = process.env.EXAUTH;
 const exstreamerURL = process.env.EXSTREAMER;
