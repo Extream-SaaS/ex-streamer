@@ -203,21 +203,21 @@ const init = async () => {
         api_user: 'admin',
         api_pass: 'DNdHipVUM4'
       },
-      // relay: {
-      //   ffmpeg: process.env.FFMPEG_PATH || '/usr/local/bin/ffmpeg',
-      //   tasks: [
-      //     {
-      //       app: 'live',
-      //       mode: 'push',
-      //       edge: `rtmp://127.0.0.1/hls`,
-      //     },
-      //     {
-      //       app: 'recorder',
-      //       mode: 'push',
-      //       edge: `rtmp://127.0.0.1/hls-record`,
-      //     },
-      //   ],
-      // },
+      relay: {
+        ffmpeg: process.env.FFMPEG_PATH || '/usr/local/bin/ffmpeg',
+        // tasks: [
+        //   {
+        //     app: 'live',
+        //     mode: 'push',
+        //     edge: `rtmp://127.0.0.1/hls`,
+        //   },
+        //   {
+        //     app: 'recorder',
+        //     mode: 'push',
+        //     edge: `rtmp://127.0.0.1/hls-record`,
+        //   },
+        // ],
+      },
       trans: {
         ffmpeg: process.env.FFMPEG_PATH || '/usr/local/bin/ffmpeg',
         tasks: [
