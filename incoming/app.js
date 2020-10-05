@@ -155,7 +155,7 @@ const hlsOutput = [
 
 
 const pubsub = new PubSub({grpc, projectId});
-const LOG_TYPE = 3;
+const LOG_TYPE = 4;
 logger.setLogType(LOG_TYPE);
 
 function push(
