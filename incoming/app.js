@@ -8,6 +8,8 @@ if (process.env.NODE_ENV !== 'production') {
 const {PubSub} = require('@google-cloud/pubsub');
 const grpc = require('grpc');
 const projectId = 'stoked-reality-284921';
+const Redis = require('ioredis');
+const redis = new Redis();
 const axios = require('axios');
 const exauthURL = process.env.EXAUTH;
 const exstreamerURL = process.env.EXSTREAMER;
@@ -203,21 +205,21 @@ const init = async () => {
         api_user: 'admin',
         api_pass: 'DNdHipVUM4'
       },
-      relay: {
-        ffmpeg: process.env.FFMPEG_PATH || '/usr/local/bin/ffmpeg',
-        tasks: [
-          {
-            app: 'live',
-            mode: 'push',
-            edge: `rtmp://${exstreamerURL}/hls`,
-          },
-          {
-            app: 'recorder',
-            mode: 'push',
-            edge: `rtmp://${exstreamerURL}/hls-record`,
-          },
-        ],
-      },
+      // relay: {
+      //   ffmpeg: process.env.FFMPEG_PATH || '/usr/local/bin/ffmpeg',
+      //   tasks: [
+      //     {
+      //       app: 'live',
+      //       mode: 'push',
+      //       edge: `rtmp://127.0.0.1/hls`,
+      //     },
+      //     {
+      //       app: 'recorder',
+      //       mode: 'push',
+      //       edge: `rtmp://127.0.0.1/hls-record`,
+      //     },
+      //   ],
+      // },
       trans: {
         ffmpeg: process.env.FFMPEG_PATH || '/usr/local/bin/ffmpeg',
         tasks: [
@@ -326,13 +328,41 @@ const init = async () => {
         this.streams.set(streamKey, { name, id, record: (StreamPath.indexOf('/hls-record/') !== -1), abr: false });
       } else if (StreamPath.indexOf('/recorder/') !== -1 || StreamPath.indexOf('/live/') !== -1) {
         //
-        // Start Relay to youtube, facebook, and/or twitch
+        // Start Relay to live, recorder youtube, facebook, and/or twitch
         //
+        let url, session, params, query;
+        if (StreamPath.indexOf('/recorder/') !== -1) {
+          url = `rtmp://${process.env.YOUTUBE_URL}/hls-record`;
+          session = nms.nodeRelaySession({
+            ffmpeg: config.relay.ffmpeg,
+            inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
+            ouPath: url
+          });
+          session.id = `record-${id}`;
+          session.on('end', (id) => {
+            this.dynamicSessions.delete(id);
+          });
+          this.dynamicSessions.set(session.id, session);
+          session.run();
+        } else if (StreamPath.indexOf('/live/') !== -1) {
+          url = `rtmp://${process.env.YOUTUBE_URL}/hls`;
+          session = nms.nodeRelaySession({
+            ffmpeg: config.relay.ffmpeg,
+            inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
+            ouPath: url
+          });
+          session.id = `live-${id}`;
+          session.on('end', (id) => {
+            this.dynamicSessions.delete(id);
+          });
+          this.dynamicSessions.set(session.id, session);
+          session.run();
+        }
         if (args.youtube) {
-          const params = utils.getParams(args, 'youtube_');
-          const query = _.isEmpty(params) ? '' : `?${querystring.stringify(params)}`;
-          const url = `rtmp://${process.env.YOUTUBE_URL}/${args.youtube}${query}`;
-          const session = nms.nodeRelaySession({
+          params = utils.getParams(args, 'youtube_');
+          query = _.isEmpty(params) ? '' : `?${querystring.stringify(params)}`;
+          url = `rtmp://${process.env.YOUTUBE_URL}/${args.youtube}${query}`;
+          session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
             inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
             ouPath: url
@@ -345,9 +375,9 @@ const init = async () => {
           session.run();
         }
         if (args.facebook) {
-          const params = utils.getParams(args, 'facebook_');
-          const query = _.isEmpty(params) ? '' : `?${querystring.stringify(params)}`;
-          const url = `rtmps://${process.env.FACEBOOK_URL}/${args.facebook}${query}`;
+          params = utils.getParams(args, 'facebook_');
+          query = _.isEmpty(params) ? '' : `?${querystring.stringify(params)}`;
+          url = `rtmps://${process.env.FACEBOOK_URL}/${args.facebook}${query}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
             inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
@@ -361,9 +391,9 @@ const init = async () => {
           session.run();
         }
         if (args.twitch) {
-          const params = utils.getParams(args, 'twitch_');
-          const query = _.isEmpty(params) ? '' : `?${querystring.stringify(params)}`;
-          const url = `rtmp://${process.env.TWITCH_URL}/${args.twitch}${query}`;
+          params = utils.getParams(args, 'twitch_');
+          query = _.isEmpty(params) ? '' : `?${querystring.stringify(params)}`;
+          url = `rtmp://${process.env.TWITCH_URL}/${args.twitch}${query}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
             inPath: `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath}`,
@@ -424,6 +454,19 @@ const init = async () => {
         //
         // Stop the Relay's
         //
+        if (StreamPath.indexOf('/recorder/') !== -1) {
+          let session = this.dynamicSessions.get(`recorder-${id}`);
+          if (session) {
+            session.end();
+            this.dynamicSessions.delete(`recorder-${id}`);
+          }
+        } else if (StreamPath.indexOf('/live/') !== -1) {
+          let session = this.dynamicSessions.get(`live-${id}`);
+          if (session) {
+            session.end();
+            this.dynamicSessions.delete(`live-${id}`);
+          }
+        }
         if (args.youtube) {
           let session = this.dynamicSessions.get(`youtube-${id}`);
           if (session) {
