@@ -17,7 +17,6 @@ kind: Deployment
 metadata:
   name: extreamer-incoming
 spec:
-  replicas: 4
   selector:
     matchLabels:
       app: extreamer-incoming
