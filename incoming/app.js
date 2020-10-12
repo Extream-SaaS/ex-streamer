@@ -325,13 +325,13 @@ const init = async () => {
         const name = streamKey.split('-')[0];
         console.log('stream name', streamKey);
         this.streams.set(streamKey, { name, id, record: (StreamPath.indexOf('/hls-record/') !== -1), abr: false });
-      } else if (StreamPath.indexOf('/recorder/') !== -1 || StreamPath.indexOf('/live/') !== -1) {
+      } else if (StreamPath.indexOf('/recorder/') !== -1) {
         //
         // Start Relay to live, recorder youtube, facebook, and/or twitch
         //
         let url, session, params, query;
         if (StreamPath.indexOf('/recorder/') !== -1) {
-          url = `rtmp://${exstreamerURL}/${StreamPath.replace('recorder/', 'hls-record/')}`;
+          url = `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath.replace('recorder/', 'hls-record/')}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
             // inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
@@ -345,7 +345,7 @@ const init = async () => {
           this.dynamicSessions.set(session.id, session);
           session.run();
         } else if (StreamPath.indexOf('/live/') !== -1) {
-          url = `rtmp://${exstreamerURL}/${StreamPath.replace('live/', 'hls/')}`;
+          url = `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath.replace('live/', 'hls/')}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
             // inPath: `rtmp://${exstreamerURL}:${config.rtmp.port}${StreamPath}`,
