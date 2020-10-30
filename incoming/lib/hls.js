@@ -1,7 +1,5 @@
 const _ = require('lodash');
 const chokidar = require('chokidar');
-const stream = require('stream');
-const { join } = require('path');
 const EventEmitter = require('events');
 const fs = require('./fs');
 const {Storage} = require('@google-cloud/storage');
@@ -20,10 +18,11 @@ const VOD_APP_NAME = '720p';
 
 // HLS - test4/720p/index.m3u8
 const handlePlaylist = async (type, path, mediaRoot, stream, streamName, appName) => {
-  console.log('handlePlaylist', path);
+  const abr = path.replace('index.m3u8', '../live.m3u8');
+  console.log('handlePlaylist', path, abr);
   const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
-  if (type === 'add' && !stream.abr) {
-    // create the ABR file
+  if (!await fs.exists(abr)) {
+    // create the ABR file as it doesn't exist
     nodeEvent.emit("newHlsStream", streamName);
   }
   try {

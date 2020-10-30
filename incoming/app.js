@@ -436,6 +436,8 @@ const init = async () => {
       logger.log('[NodeEvent on donePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
       if (StreamPath.indexOf('/hls/') != -1 || StreamPath.indexOf('/hls-record/') != -1) {
         const name = StreamPath.split('/').pop();
+        // remove stream from map
+        this.streams.delete(name);
         // Wait a few minutes before deleting the HLS files on this Server
         // for this session
         const timeoutMs = _.isEqual(process.env.NODE_ENV, 'development') ?
