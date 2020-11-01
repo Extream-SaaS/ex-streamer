@@ -151,9 +151,13 @@ function pull(
         // "Ack" (acknowledge receipt of) the message
         message.ack();
         console.log('rejecting session');
+      } else {
+        message.nack();
       }
     } else if (session) {
       message.ack();
+    } else {
+      message.nack();
     }
   };
   subscription.on('message', messageHandler);

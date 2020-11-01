@@ -18,11 +18,10 @@ const VOD_APP_NAME = '720p';
 
 // HLS - test4/720p/index.m3u8
 const handlePlaylist = async (type, path, mediaRoot, stream, streamName, appName) => {
-  const abr = path.replace('index.m3u8', '../live.m3u8');
-  console.log('handlePlaylist', path, abr);
+  console.log('handlePlaylist', path);
   const uploadBucket = storage.bucket(process.env.ASSETS_BUCKET);
-  if (!await fs.exists(abr)) {
-    // create the ABR file as it doesn't exist
+  if (type === 'add' && !stream.abr) {
+    // create the ABR file
     nodeEvent.emit("newHlsStream", streamName);
   }
   try {
