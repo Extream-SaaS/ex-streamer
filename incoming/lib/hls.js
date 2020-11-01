@@ -56,7 +56,8 @@ const handlePlaylistCopy = async (path, mediaRoot, stream, streamName, appName) 
     let vodM3u8;
     const vodFilename = 'vod.m3u8';
     const liveFilename = path.split('\\').pop().split('/').pop();
-    const vodPath = path.replace(liveFilename, vodFilename);
+    const vodPath = path.replace(`${VOD_APP_NAME}/${liveFilename}`, vodFilename);
+    console.log('====== video on demand path ======', vodPath);
     if (vodFilename) {
       if (await fs.exists(vodPath)) {
         // Read existing vod playlist.

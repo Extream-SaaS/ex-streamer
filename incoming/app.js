@@ -114,7 +114,7 @@ const hlsOutput = [
 
 
 const pubsub = new PubSub({grpc, projectId});
-const LOG_TYPE = 4;
+const LOG_TYPE = 1;
 logger.setLogType(LOG_TYPE);
 
 function push(
@@ -326,7 +326,7 @@ const init = async () => {
     });
     
     nms.on('postPublish', async (id, StreamPath, args) => {
-      logger.log('[NodeEvent on postPublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+      console.log('[NodeEvent on postPublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
       if (StreamPath.indexOf('/hls/') !== -1 || StreamPath.indexOf('/hls-record/') !== -1) {
         const streamKey = StreamPath.split('/').pop();
         const name = streamKey.split('-')[0];
@@ -335,7 +335,7 @@ const init = async () => {
           this.streams.delete(streamKey);
         }
         this.streams.set(streamKey, { name, id, record: (StreamPath.indexOf('/hls-record/') !== -1), abr: false });
-      } else if (StreamPath.indexOf('/recorder/') !== -1) {
+      } else if (StreamPath.indexOf('/recorder/') !== -1 || StreamPath.indexOf('/live/') !== -1) {
         //
         // Start Relay to live, recorder youtube, facebook, and/or twitch
         //
