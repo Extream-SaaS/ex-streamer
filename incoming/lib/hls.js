@@ -114,12 +114,21 @@ const handleABR = async (path, stream, streamName) => {
 
 const onFile = async (absolutePath, type, mediaRoot, streams) => {
   try {
-    const path = _.trim(_.replace(absolutePath, mediaRoot, ''), '/');
+    let path = _.replace(absolutePath, mediaRoot, '');
+    console.log('initial path', absolutePath, mediaRoot, path);
+    path = _.trim(path, '.');
+    console.log('trimmed path 1', path);
+    path = _.trim(path, '/');
+    console.log('trimmed path 2', path);
     const paths = _.split(path, '/');
     const streamName = _.nth(paths, 0);
     const appName = _.nth(paths, 1);
-    console.log(type, path, streamName);
+    console.log('onFile', type, path, streamName);
     const stream = streams.get(streamName);
+    if (!stream) {
+      console.log('streamName', streamName);
+      throw new Error('Stream not found');
+    }
     const record = stream.record;
     // only send adds for video
     if (_.endsWith(path, '.ts') && type === 'add') {

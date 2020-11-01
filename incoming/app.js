@@ -20,7 +20,6 @@ const hls = require('./lib/hls');
 const abr = require('./lib/abr');
 const logger = require('./lib/logger');
 const utils = require('./lib/utils');
-const { Stream } = require('stream');
 
 const hlsOutput = [
   '-vf',
@@ -143,7 +142,7 @@ function pull(
     console.log(`Received message ${message.id}:`);
     messageCount += 1;
     const body = message.data ? JSON.parse(Buffer.from(message.data, 'base64').toString()) : null;
-    console.log(body);
+    // console.log(body);
     const session = nms.getSession(`${body.payload.sessionId}`);
     if (body.error || body.status === 'expired') {
       if (session) {
@@ -152,12 +151,16 @@ function pull(
         message.ack();
         console.log('rejecting session');
       } else {
+        console.log('nacking');
         message.nack();
       }
     } else if (session) {
+      console.log('acking');
       message.ack();
     } else {
-      message.nack();
+      console.log('nacking');
+      // message.nack();
+      message.ack();
     }
   };
   subscription.on('message', messageHandler);
@@ -199,7 +202,7 @@ const init = async () => {
       },
       http: {
         port: 8000,
-        mediaroot: process.env.MEDIA_ROOT || './files',
+        mediaroot: process.env.MEDIA_ROOT || 'files',
         allow_origin: '*',
         api: true
       },
@@ -328,6 +331,9 @@ const init = async () => {
         const streamKey = StreamPath.split('/').pop();
         const name = streamKey.split('-')[0];
         console.log('stream name', streamKey);
+        if (this.streams.get(streamKey)) {
+          this.streams.delete(streamKey);
+        }
         this.streams.set(streamKey, { name, id, record: (StreamPath.indexOf('/hls-record/') !== -1), abr: false });
       } else if (StreamPath.indexOf('/recorder/') !== -1) {
         //
@@ -335,6 +341,7 @@ const init = async () => {
         //
         let url, session, params, query;
         if (StreamPath.indexOf('/recorder/') !== -1) {
+          console.log('starting stream to hls-record')
           url = `rtmp://127.0.0.1:${config.rtmp.port}${StreamPath.replace('recorder/', 'hls-record/')}`;
           session = nms.nodeRelaySession({
             ffmpeg: config.relay.ffmpeg,
@@ -441,7 +448,9 @@ const init = async () => {
       if (StreamPath.indexOf('/hls/') != -1 || StreamPath.indexOf('/hls-record/') != -1) {
         const name = StreamPath.split('/').pop();
         // remove stream from map
-        this.streams.delete(name);
+        const stream = this.streams.get(name);
+        stream.complete = true;
+        this.streams.set(name, stream);
         // Wait a few minutes before deleting the HLS files on this Server
         // for this session
         const timeoutMs = _.isEqual(process.env.NODE_ENV, 'development') ?
