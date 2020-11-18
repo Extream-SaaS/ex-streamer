@@ -1,6 +1,6 @@
 {
   "name": "ex-streamer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Ingest RTMP - Transcode into HLS - Relay to Social Media - Live Streaming",
   "main": "app.js",
   "scripts": {
