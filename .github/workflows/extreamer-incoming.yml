@@ -3,13 +3,8 @@ name: Extreamer-Incoming
 on:
   push:
     paths:
-    - 'incoming/**'
-    branches: [ master ]
-  pull_request:
-    paths:
       - 'incoming/**'
     branches: [ master ]
-
 
 env:
   PROJECT_ID: ${{ secrets.GCLOUD_PROJECT_ID }}
@@ -19,7 +14,7 @@ env:
   IMAGE: extreamer-incoming
 
 jobs:
-  buildPushDeployExstreamerIncoming:
+  deploy:
     name: Build Push Deploy Exstreamer Incoming - Kubernetes
     runs-on: ubuntu-latest
     defaults:
@@ -33,7 +28,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
         id: Build
-        uses: actions/setup-node@v1.4.3
+        uses: actions/setup-node@v2-beta
         with:
           node-version: ${{ matrix.node-version }}
       # - run: npm ci

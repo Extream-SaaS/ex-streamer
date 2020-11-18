@@ -1,6 +1,6 @@
 {
   "name": "extreamer-encoding-worker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "app.js",
   "scripts": {
@@ -8,8 +8,8 @@
     "dev": "NODE_ENV=development nodemon app",
     "test": "echo \"Error: no test configured!\""
   },
-  "engines" : {
-    "node" : "12.x"
+  "engines": {
+    "node": "12.x"
   },
   "keywords": [],
   "author": "Rich <rich@extream.app>",
