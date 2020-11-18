@@ -3,9 +3,12 @@ ARG GCLOUD_AUTH="/app/service-accounts/stoked-reality.json"
 FROM node:lts-alpine
 
 # RUN apk add --no-cache --update --virtual build-deps git python3 alpine-sdk build-base gcc && \
-RUN apk add --no-cache --update --virtual build-deps git && \
-    apk add --no-cache --upgrade libcrypto1.1 libssl1.1 libgomp expat && \
-    mkdir /app && mkdir /files
+RUN apk add --no-cache --update --virtual build-deps git \
+    python \
+    make \
+    g++ \
+    && apk add --no-cache --upgrade libcrypto1.1 libssl1.1 libgomp expat \
+    && mkdir /app && mkdir /files
 
 ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:/usr/lib:/usr/lib64:/lib:/lib64
 

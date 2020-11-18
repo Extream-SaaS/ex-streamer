@@ -59,7 +59,7 @@ jobs:
       - run: |-
           gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
       # Build the Docker image
-      - name: Build
+      - name: Docker Build
         id: Docker-Build
         run: |-
           docker build \
